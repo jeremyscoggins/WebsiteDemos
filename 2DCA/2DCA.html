@@ -1,0 +1,394 @@
+<html>
+	<head>
+		<title>2D Cellular Automata</title>
+		<style>
+			#mainCanvas{
+				height:400px;
+				width:600px;
+				border:1px solid black;
+			}
+			table{
+				font-size:12pt;
+			}
+			tr td.hidden{
+				display:none;
+			}
+			/*tr:hover td.hidden{
+				display:block;
+			}*/
+		</style>
+	</head>
+	<body>
+		<a href="./CAIndex.html">Back to Index</a><br>
+		<h1>2D Cellular Automata</h1>
+		<canvas id="mainCanvas" width="600" height="400"></canvas><br>
+		<span id="start"><label>Start Type: </label>
+		<label for="start"> Very Dense:</label><input type="radio" name="start" value="5000" checked>
+		<label for="start"> Dense:</label><input type="radio" name="start" value="1000">
+		<label for="start"> Light:</label><input type="radio" name="start" value="500">
+		<label for="start"> Sparse:</label><input type="radio" name="start" value="10">
+		</span><br>
+		<label for="rule">Rule (S/B): </label><input type="text" name="rule" id="rule">
+		<!--<button onClick="document.getElementById('rule').value=Math.round(Math.random()*255);setup();return false;">Random</button>-->
+		<button onClick="setup();return false;">Restart</button>
+		<button onClick="pause();return false;">Pause</button>
+		<h4>Rules to try:</h4>
+		<table BORDER="1" CELLSPACING="1" CELLPADDING="1">
+		  <tr>
+			<td>Name</td>
+			<td>Rule (S/B)</td>
+			<td>Character</td>
+			<td class="hidden">Description</td>
+		  </tr>
+		  <tr>
+			<td><a href="?rule=125/36" name="2x2">2x2</a></td>
+			<td>125/36</td>
+			<td>Chaotic</td>
+			<td class="hidden">Similar in character to <a href="#Conway's Life"> Conway's
+			  Life</a>, but creates completely different
+			patterns. Many different oscillators occur at random, and a rare glider.
+			  Simple block seeds usually lead to oscillators of various periods.<br>
+			  This rule is also
+			a 2x2 block universe. This means that patterns consisting entirely of 2x2 blocks, all
+			aligned, will continue to consist of 2x2 blocks.<br>
+			Author unknown.</td>
+		  </tr>
+		  <tr>
+			<td><a href="?rule=34/34" name="34 Life">34 Life</a></td>
+			<td>34/34</td>
+			<td>Exploding</td>
+			<td class="hidden">One of the first explored alternatives to Conway's Life, back in the early
+			1970's. Computing power was so low back then, it was months before anyone noticed that
+			this is an exploding universe. What makes this universe interesting is the variety of
+			small oscillators and the period-3 orthogonal spaceship.<br>
+			Author unknown.</td>
+		  </tr>
+		  <tr>
+			<td><a href="?rule=1358/357" name="Amoeba">Amoeba</a></td>
+			<td>1358/357</td>
+			<td>Chaotic</td>
+			<td class="hidden">An &quot;amoeba&quot; universe - forms large random areas that resemble
+			amoebas. Internal to a random area is chaos. The edge vacillates wildly, and patterns tend
+			to grow more than shrink. The more they grow, the more certain their survival. This is a
+			fairly well-balanced rule.<br>
+			Author unknown.</td>
+		  </tr>
+		  <tr>
+			<td><a href="?rule=4567/345" name="Assimilation">Assimilation</a></td>
+			<td>4567/345</td>
+			<td>Stable</td>
+			<td class="hidden">Rule similar to Diamoeba, but much more stable. The diamond-shaped
+			patterns are filled in 70-85% and never die.<br>
+			Author unknown.</td>
+		  </tr>
+		  <tr>
+			<td><a href="?rule=235678/378" name="Coagulations">Coagulations</a></td>
+			<td>235678/378</td>
+			<td>Exploding</td>
+			<td class="hidden">Creates gooey coagulations as it expands forever. Best viewed at zoom=1.
+			Notice that this is a close variation of the previous rule, 235678/3678, except that there
+			is one less condition for a dead cell to come to life on the next generation. In general
+			this should make a universe less active, but this is an exception.<br>
+			Author unknown.</td>
+		  </tr>
+		  <tr>
+			<td><a href="?rule=23/3" name="Conway's Life">Conway's
+			Life</a></td>
+			<td>23/3</td>
+			<td>Chaotic</td>
+			<td class="hidden"> This is the most famous cellular automata ever invented.
+			People have been discovering patterns for this rule since around 1970. Large collections
+			are available on the Internet.<br>
+			  The rule definition is very simple: a living cell remains alive only when surrounded by 2 or 3 living neighbors,&nbsp;
+			  otherwise it dies of loneliness or overcrowding.  A dead cell comes to life when it has
+			  exactly 3 living neighbors.<br>
+			A rule by John Conway.</td>
+		  </tr>
+		  <tr>
+			<td><a href="?rule=45678/3" name="Coral">Coral</a></td>
+			<td>45678/3</td>
+			<td>Exploding</td>
+			<td class="hidden">This rule produces patterns with a surprisingly slow rate of expansion and
+			an interesting coral-like texture.<br>
+			Author unknown.</td>
+		  </tr>
+		  <tr>
+			<td><a href="?rule=34678/3678" name="Day &amp; Night">Day &amp;
+			Night</a></td>
+			<td>34678/3678</td>
+			<td>Stable</td>
+			<td class="hidden">So named because dead cells in fields of live cells act by the same rules
+			as live cells in fields of dead cells. There are obviously other rules, which have this
+			symmetrical property, but this rule was chosen because it has some interesting high period
+			spaceships and oscillators. The properties of the rule were explored by David Bell.<br>
+			A rule by Nathan Thompson.</td>
+		  </tr>
+		  <tr>
+			<td><a href="?rule=5678/35678" name="Diamoeba">Diamoeba</a></td>
+			<td>5678/35678</td>
+			<td>Chaotic</td>
+			<td class="hidden">Creates solid diamond-shaped &quot;amoeba&quot; patterns that are
+			surprisingly unpredictable. For a long time it was not known whether any diamonds expand
+			forever, or if the tendency toward the catastrophic destruction of corners is too strong.
+			Finally in March 1999 David Eppstein found the&nbsp; c/7 spaceship, and David Bell made a
+			100% spacefiller out of it.<br>
+			A rule by Dean Hickerson.</td>
+		  </tr>
+		  <tr>
+			<td><a href="?rule=012345678/3" name="Flakes">Flakes</a></td>
+			<td>012345678/3</td>
+			<td>Expanding</td>
+			<td class="hidden">Also known as Life without Death (LwoD).<br>
+			The rule produces beautiful flakes, starting from simple groups of cells. Try for example
+			various filled circles with radius &gt; 20 cells. The rule produces also ladders, what
+			allowed David Griffeath and Cris Moore to prove that <a
+			href="http://psoup.math.wisc.edu/java/jlwodpc.html">the rule is P-complete</a>.<br>
+			A rule by Janko Gravner.</td>
+		  </tr>
+		  <tr>
+			<td><a href="?rule=1/1" name="Gnarl">Gnarl</a></td>
+			<td>1/1</td>
+			<td>Exploding</td>
+			<td class="hidden">A simple rule provided by Kellie Evans. To see its beauty start with
+			simple patterns, for example with a single dot.</td>
+		  </tr>
+		  <tr>
+			<td><a href="?rule=23/36" name="HighLife">HighLife</a></td>
+			<td>23/36</td>
+			<td>Chaotic</td>
+			<td class="hidden">This rule is very similar to Conway's Life, but it has a surprise
+			replicator pattern. There is no known replicator in Conway's Life.<br>
+			A rule by Nathan Thompson.</td>
+		  </tr>
+		  <tr>
+			<td><a name="InverseLife" href="?rule=34678/0123478/2">InverseLife</a></td>
+			<td>34678/0123478/2</td>
+			<td>Chaotic</td>
+			<td class="hidden">The rule shows similar oscillators and gliders to GOL, but dead cells create the patterns amongst live cells in the background.<br>
+			  A rule by Jason Rampe.</td>
+		  </tr>
+		  <tr>
+			<td><a href="?rule=5/345" name="Long life">Long life</a></td>
+			<td>5/345</td>
+			<td>Stable</td>
+			<td class="hidden">This rule is called &quot;Long life&quot; because of the extremely high
+			period patterns that can be produced in this universe.<br>
+			A rule by Andrew Trevorrow.</td>
+		  </tr>
+		  <tr>
+			<td><a href="?rule=12345/3" name="Maze">Maze</a></td>
+			<td>12345/3</td>
+			<td>Exploding</td>
+			<td class="hidden">An &quot;a-maze-ing&quot; universe - crystallizes into maze-like patterns.
+			Interesting variations: try removing 5 from the &quot;Survival&quot; list. To produce mice
+			running in the maze, add 7 to the &quot;Births&quot; list.<br>
+			Author unknown.</td>
+		  </tr>
+		  <tr>
+			<td><a name="Mazectric" href="?rule=1234/3">Mazectric</a></td>
+			<td>1234/3</td>
+			<td>Exploding</td>
+			<td class="hidden">"Mazectric" and "Corrosion of Conformity". An interesting variation of the
+			  Maze rule which produces longer halls and a highly linear format. Adding B7 to maze (keeping S5) allows some "mice" to run back and forth in the halls. Switching the B3 to B45 though, electrifies the mazes. Dropping S3 gives "Corrosion of Conformity", a slow burn from almost any starting pattern, resulting in a rusting away of the local continuum.<br>
+			  A rule by Charles A. Rockafellor.</td>
+		  </tr>
+		  <tr>
+			<td><a href="?rule=245/368" name="Move">Move</a></td>
+			<td>245/368</td>
+			<td>Stable</td>
+			<td class="hidden">A very calm universe, which nonetheless has a very commonly occurring slow
+			spaceship and a slow puffer.<br>
+			Author unknown.</td>
+		  </tr>
+		  <tr>
+			<td><a href="?rule=238/357" name="Pseudo life">Pseudo life</a></td>
+			<td>238/357</td>
+			<td>Chaotic</td>
+			<td class="hidden">In this close variation of Conway's Life, the chaos is remarkably similar,
+			but almost none of the engineered patterns work.<br>
+			Author unknown.</td>
+		  </tr>
+		  <tr>
+			<td><a href="?rule=1357/1357" name="Replicator">Replicator</a></td>
+			<td>1357/1357</td>
+			<td>Exploding</td>
+			<td class="hidden">In this remarkable universe every pattern is a replicator. After 32 steps
+			every starting pattern is replicated 8 times.<br>
+			Author unknown.</td>
+		  </tr>
+		  <tr>
+			<td><a href="?rule=/2" name="Seeds_2">Seeds (2)</a></td>
+			<td>/2</td>
+			<td>Exploding</td>
+			<td class="hidden">Every living cell dies every generation, but most patterns explode anyway.
+			It's a challenge to build new patterns that don't explode. Arguably the simplest
+			challenging rule.<br>
+			A rule by Brian Silverman.</td>
+		  </tr>
+		  <tr>
+			<td><a href="?rule=/234" name="Serviettes">Serviettes</a></td>
+			<td>/234</td>
+			<td>Exploding</td>
+			<td class="hidden">Like /2, every living cell dies every generation. This rule is picked for
+			the exceptional fabric-like beauty of the patterns that it produces.<br>
+			Author unknown.</td>
+		  </tr>
+		  <tr>
+			<td><a href="?rule=235678/3678" name="Stains">Stains</a></td>
+			<td>235678/3678</td>
+			<td>Stable</td>
+			<td class="hidden">Most close variations of these rules expand forever, but this one
+			curiously does not. Why? <br>
+			Author unknown.</td>
+		  </tr>
+		  <tr>
+			<td><a name="WalledCities" href="?rule=2345/45678">WalledCities</a></td>
+			<td><font size="2">2345/45678</font></td>
+			<td>Stable</td>
+			<td class="hidden">The rule creates walled cities of activity. Once the field has stabilized, one can draw lines to connect the cities and the patterns expand to create an even larger city. But once the wall is complete, the city never grows, even though there is near-random activity inside
+			  it.<br>
+			  A rule by David Macfarlane.</td>
+		  </tr>
+		</table>
+		<span>Rules Credit: </span><a href="http://psoup.math.wisc.edu/mcell/rullex_life.html">http://psoup.math.wisc.edu/mcell/rullex_life.html</a>
+
+
+		<script type="text/javascript">
+			function clickPixel(x, y) {
+				var canvasData = context.getImageData(0,0,canvas.width, canvas.height);
+				if(!checkNeighbor(canvasData, x, y))
+					setPixel(canvasData,Math.floor(x/cellSize)*cellSize,Math.floor(y/cellSize)*cellSize,0,0,0,255);
+				else
+					setPixel(canvasData,Math.floor(x/cellSize)*cellSize,Math.floor(y/cellSize)*cellSize,255,255,255,255);
+				context.putImageData(canvasData, 0, 0);
+			}
+			function setPixel(imageData, x, y, r, g, b, a) {
+				for(var y2 = y; y2< y+cellSize; y2++){
+					for(var x2 = x; x2< x+cellSize; x2++){
+						var lr=r,lg=g,lb=b;
+						var index = (x2 + y2 * imageData.width) * 4;
+						if((x2==x || y2==y) && r ==0)
+							lr = lg = lb = 192;
+						imageData.data[index+0] = lr;
+						imageData.data[index+1] = lg;
+						imageData.data[index+2] = lb;
+						imageData.data[index+3] = a;
+					}
+				}
+			}
+			function checkNeighbor(imageData, x, y) {
+				if(x > imageData.width)
+					x=0;
+				if(y > imageData.height)
+					y=0;
+				if(x < 0)
+					x=imageData.width-cellSize;
+				if(y < 0)
+					y=imageData.height-cellSize;
+					
+				var idx = ((x) + (y) * imageData.width) * 4;
+				if(imageData.data[idx] < 255 )
+					return true;
+				return false;
+			}
+			function pause(){
+				pauseState = !pauseState
+			}
+	
+			var rule,rules,canvasData,myState,newState,pauseState=false,mouseDown=false;
+			var cellSize=5;
+			var canvas = document.getElementById("mainCanvas");
+			var context = canvas.getContext('2d');
+			var ruleEl = document.getElementById("rule");
+			var startEl = document.getElementById("start");
+			canvas.onclick=function(event){
+				clickPixel(event.offsetX, event.offsetY)
+			}
+			canvas.onmousedown=function(){mouseDown=true};
+			canvas.onmouseup=function(){mouseDown=false};
+			canvas.onmousemove=function(event){
+				if(mouseDown==true)
+					canvas.onclick(event);
+			};
+			var locationRule = window.location.href.split("=")[1];
+			var frameRate = 10;
+			var frameTime = 1000/frameRate;
+			function setup(){
+				canvasData = context.createImageData(canvas.width, canvas.height);
+				for(var i =0;i<startEl.children.length;i++){
+					if(startEl.children[i].checked)
+						startEl.checkedValue = startEl.children[i].value;
+				}
+				rule = ruleEl.value||locationRule||"23/3";
+				ruleEl.value = rule;
+				//rules = (parseInt(rule)).toString(2).split('');
+				rules = rule.split("/");
+				for(var i=0;i< rules.length;i++)
+					rules[i]=rules[i].split('');
+				for(var x=0;x<canvas.width;x+=cellSize){
+					for(var y=0;y<canvas.height;y+=cellSize){
+						setPixel(canvasData,x,y,255,255,255,255);
+					}
+				}
+				for(var i=0;i<startEl.checkedValue;i++){
+					var x = Math.round(Math.random()*(canvasData.width/cellSize))*cellSize;
+					var y = Math.round(Math.random()*(canvasData.height/cellSize))*cellSize;
+					setPixel(canvasData,x,y,0,0,0,255);
+				}
+				context.putImageData(canvasData, 0, 0);
+			}
+			setup();
+			function draw(){
+				if(!pauseState){
+					var startTime = new Date();
+					var oldCanvasData = context.getImageData(0,0,canvas.width, canvas.height);
+					var canvasData = context.createImageData(canvas.width, canvas.height);
+					var pixelCount=0;
+					for (var y = 0; y < canvasData.height; y+=cellSize) {
+						for (var x = 0; x < canvasData.width; x+=cellSize) {
+							// Index of the pixel in the array
+							newState = 0
+							var neighbors = 0;
+							for(var y2 = -cellSize;y2<=cellSize;y2+=cellSize){
+								for(var x2 = -cellSize;x2<=cellSize;x2+=cellSize){
+									if(x2 != 0 || y2 != 0){
+										if(checkNeighbor(oldCanvasData,x+x2,y+y2))
+											neighbors++;
+									}
+								}
+							}
+							if(oldCanvasData.data[(x + y * canvas.width) * 4] < 255)
+								myState=1;
+							else
+								myState=0;
+							
+							if(myState == 1){
+								for(var i = 0; i< rules[0].length;i++){
+									if(neighbors == rules[0][i])
+										newState = 1;
+								}
+							} else {
+								for(var i = 0; i< rules[1].length;i++){
+									if(neighbors == rules[1][i])
+										newState = 1;
+								}
+							}
+								
+					 
+							// Update the values of the pixel;
+							if(newState == 1 )
+								setPixel(canvasData,x,y,0,0,0,255);
+							else
+								setPixel(canvasData,x,y,255,255,255,255);
+						}
+					}
+					context.putImageData(canvasData, 0, 0);
+					var execTime = (new Date())-startTime;
+				}
+				setTimeout(draw,Math.max(0,frameTime-execTime));
+			}
+			setTimeout(draw,frameTime);
+		</script>
+	</body>
+	
+</html>

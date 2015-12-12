@@ -1,0 +1,119 @@
+<html>
+	<head>
+		<title>1D Cellular Automata</title>
+		<style>
+			#mainCanvas{
+				height:400px;
+				width:400px;
+				border:1px solid black;
+			}
+		</style>
+	</head>
+	<body>
+		<a href="./CAIndex.html">Back to Index</a><br>
+		<h1>1D Cellular Automata</h1>
+		<canvas id="mainCanvas" width="400" height="400"></canvas><br>
+		<span id="start"><label>Start Type: </label><label for="start"> Random:</label><input type="radio" name="start" value="r"><label for="start"> 1 point:</label><input type="radio" name="start" value="1"><label for="start"> 2 point:</label><input type="radio" name="start" value="2"><label for="start"> 3 point:</label><input type="radio" name="start" value="3" checked></span><br>
+		<label for="rule">Rule #(0-255): </label><input type="text" name="rule" id="rule"><button onClick="document.getElementById('rule').value=Math.round(Math.random()*255);setup();return false;">Random</button><button onClick="setup();return false;">Restart</button>
+		<h4>Rules to try:
+			<a href="?rule=57">57</a>
+			<a href="?rule=62">62</a>
+			<a href="?rule=90">90</a>
+			<a href="?rule=107">107</a>
+			<a href="?rule=109">109</a>
+			<a href="?rule=110">110</a>
+			<a href="?rule=153">153</a>
+			<a href="?rule=156">156</a>
+			<a href="?rule=165">165</a>
+			<a href="?rule=169">169</a>
+			<a href="?rule=182">182</a>
+			<a href="?rule=193">193</a>
+		</h4>
+		<script type="text/javascript">
+			function setPixel(imageData, x, y, r, g, b, a) {
+				index = (x + y * imageData.width) * 4;
+				imageData.data[index+0] = r;
+				imageData.data[index+1] = g;
+				imageData.data[index+2] = b;
+				imageData.data[index+3] = a;
+			}
+	
+			var currentRow,rowIndex,rule,rules,canvasData;
+			var canvas = document.getElementById("mainCanvas");
+			var context = canvas.getContext('2d');
+			var sets = ['111','110','101','100','011','010','001','000'];
+			for(var s=0;s<sets.length;s++)
+				sets[s]=sets[s].split('');
+			var ruleEl = document.getElementById("rule");
+			var startEl = document.getElementById("start");
+			var locationRule = window.location.href.split("=")[1];
+			function setup(){
+				for(var i =0;i<startEl.children.length;i++){
+					if(startEl.children[i].checked)
+						startEl.checkedValue = startEl.children[i].value;
+				}
+
+				currentRow=[];
+				rule = ruleEl.value||locationRule||90//Math.round(Math.random()*255);
+				ruleEl.value = rule;
+				rules = (parseInt(rule)).toString(2).split('');
+				for(var i = rules.length;i<8;i++)
+					rules.unshift("0");
+				//console.log(rule,rules);
+				for(var x=0;x<canvas.width;x++)
+					currentRow[x]=0;
+				//	currentRow[x]=Math.max(Math.round(Math.random()*10),1);
+				if(startEl.checkedValue == 1 || startEl.checkedValue == 3)
+					currentRow[Math.round(canvas.width/2)]=1;
+				if(startEl.checkedValue == 2 || startEl.checkedValue == 3)
+					currentRow[Math.round(canvas.width/4)]=1;
+				if(startEl.checkedValue == 2 || startEl.checkedValue == 3)
+					currentRow[Math.round(canvas.width/4*3)]=1;
+				if(startEl.checkedValue == "r"){
+					for(var x=0;x<currentRow.length;x++)
+						currentRow[x]=Math.round(Math.random()*1);
+				}
+				rowIndex = 0;
+				context.clearRect(0,0,canvas.width, canvas.height);
+				canvasData = context.getImageData(0,0,canvas.width, canvas.height);
+			}
+			setup();
+			function draw(){
+				if(rowIndex > canvas.height)
+					canvasData = context.getImageData(0,1,canvas.width, canvas.height);
+				var nextRow = [];
+				for(var x=0;x<canvas.width;x++)
+					nextRow[x]=0;
+				var y = Math.min(rowIndex,canvas.height-1);
+				//var y = 0
+				var pixelCount=0;
+				for (var x = 0; x < canvasData.width; x++) {
+					for(var s=0;s<sets.length;s++){
+						var cSet = sets[s]//.split('');
+						if(cSet[0]==currentRow[x-1] && cSet[1]==currentRow[x]  && cSet[2]==currentRow[x+1]){
+							if(rules[s]==1){
+								nextRow[x]=1;
+								pixelCount++;
+							}
+						}
+					}
+						// Index of the pixel in the array
+						var idx = (x + y * canvas.width) * 4;
+				 
+				 
+						// Update the values of the pixel;
+						if(currentRow[x] == 1)
+							setPixel(canvasData,x,y,0,0,0,255);
+						else
+							setPixel(canvasData,x,y,255,255,255,255);
+				}
+				context.putImageData(canvasData, 0, 0);
+				rowIndex++;
+				currentRow = nextRow.slice(0);
+				setTimeout(draw,15);
+			}
+			draw();
+		</script>
+	</body>
+	
+</html>

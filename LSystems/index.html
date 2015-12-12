@@ -1,0 +1,34 @@
+<html>
+<head>
+	<title>L-Systems Renderer</title>
+	<style>
+		label{
+			display:inline-block;
+			width:100px;
+		}
+		input{
+			width:200px;
+		}
+		select{
+			width:300px;
+		}
+	</style>
+	<script type="text/javascript" src="rules.js"></script>
+	<script type="text/javascript" src="lsystem.js"></script>
+</head>
+<body>
+	<label for="ruleSets">Select a Rule:</label><select name="ruleSets" id="ruleSets"></select><br/>
+	<label for="iterations">Iterations:</label><input type="text" id="iterations" name="iterations"/><br/>
+	<label for="angle">Angle:</label><input type="text" id="angle" name="angle"/><br/>
+	<label for="constants">Constants:</label><input type="text" id="constants" name="constants"/><br/>
+	<label for="axiom">Axiom:</label><input type="text" id="axiom" name="axiom"/><br/>
+	<label for="rule1">Rule 1:</label><input type="text" id="rule1" name="rule1"/><br/>
+	<label for="rule2">Rule 2:</label><input type="text" id="rule2" name="rule2"/><br/>
+	<label for="rule3">Rule 3:</label><input type="text" id="rule3" name="rule3"/><br/>
+	<label for="rule4">Rule 4:</label><input type="text" id="rule4" name="rule4"/><br/>
+	<label for="rule5">Rule 5:</label><input type="text" id="rule5" name="rule5"/><br/>
+	<label for="animate">Animate:</label><input type="checkbox" id="animate" name="animate"/><br/>
+	<button id="go">Go</button><br/>
+</body>
+<canvas height="600" width="600" id="canvas" style="border:1px solid black;"/>
+</html>

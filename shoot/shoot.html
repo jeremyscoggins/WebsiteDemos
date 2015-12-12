@@ -1,0 +1,1628 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+	<html>
+	<!---<meta name="viewport" content="width=device-width, user-scalable=no" />--->
+	<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name = "viewport" content = "initial-scale = 1.5, user-scalable = no">
+	<head>
+		<title>Shoot</title>
+		<style>	
+			body{
+				margin:0px;
+				padding:0px;
+				border:none;
+				background-color:#000000;
+			}
+			#universe{
+				position:absolute;
+				top:0px;
+				left:0px;
+			}
+			#buttons{
+				position:absolute;
+				bottom:0px;
+				left:0px;
+			}
+			#buttons2{
+				position:absolute;
+				bottom:0px;
+				right:0px;
+			}
+			#log{
+				display:none;
+			}
+		</style>
+	</head>
+<body onload="init()">
+	
+<canvas height="600" width="800" id="universe"></canvas>
+<script type="text/javascript" src="utilities.js"></script>
+<script type="text/javascript">
+try{
+	var FRAME_RATE = 60
+	var FRAME_TIME = 1000/FRAME_RATE;
+	var frameBuffer = 0;
+	var gameLoopStart,gameLoopEnd = new Date();
+	var scaleTable=[];
+	var superCache={};
+	//setup some inital settings
+	var waitTime,starImg,positions,cx,cy,height,width,mouseX,mouseY,mouseAngle,canonVector,downstart=null,centerMessage,worldSize,force,pauseTime,gameTime,roundTime,turnTime,currentRound,currentPlayer,pauseState,canvas,ctx,starPattern,thinkTime;
+	var thinkArray = [];
+	var dots=[];
+	var bigDots=[];
+	var tinyDots=[];
+	var multiplyDots=[];
+	var objectCache={};
+	var starTiles=[];
+	var totalThinkTime = 0;
+	var thinkArrayWriter = 0;
+	var translateX=0;
+	var translateY=0;
+	var players=[];
+	var moons = [];
+	var missiles = [];
+	var stars = [];
+	var starsx = 0;
+	var currentLevel=1;
+	var playerDefaults={
+				x : 0,
+				y : 0,
+				power:0,
+				angle:90,
+				shield:100,
+				score:0,
+				messages:[],
+				name:"Player ",
+				state:"idle",
+				updateTitles:true
+			};
+	var colors = ['#0000FF', '#FF0000', '#00FF00', '#FFFF00', '#00FFFF', '#FFFFFF'];
+	var numNames = ['One','Two','Three','Four'];
+
+	var levels=[
+		{
+			moons:0,
+			size:10,
+		},
+		{
+			moons:0,
+			size:20,
+		},
+		{
+			moons:1,
+			size:20,
+		},
+		{
+			moons:1,
+			orbit:true,
+			size:30
+		},
+		{
+			moons:2,
+			orbit:true,
+			size:30
+		},
+		{
+			moons:2,
+			orbit:true,
+			size:40
+		},
+		{
+			moons:3,
+			orbit:true,
+			size:40
+		},
+		{
+			moons:3,
+			orbit:true,
+			size:50
+		},
+		{
+			moons:4,
+			orbit:true,
+			size:50
+		},
+		{
+			moons:4,
+			orbit:true,
+			size:60
+		},
+	];
+	
+	var explodeParticleCount = 50;
+	var trailDensity=3;
+	var maxTurnTime=30;
+	var moonDistance=130;
+	var minDamage = 25;
+	var shotMultipliers=[500,1000,1500];
+	var speedMultiplier=1.5;
+	var forceMultiplier=30;
+	var moonForceMultiplier=10;
+	var maxShotTime = 1500;
+	var thinkArrayMax = 10;
+	var scale=1;
+	var defaultScale=1.1;
+	var desiredScale=defaultScale;
+	
+	var keepTrailTime = 10000;
+	var explosionTime = 6000;
+	var explosionSize = 30;
+
+	//var shotsPerTurn=1;
+	var maxAimTraceLength =	400;
+	var aimTraceFadeDist = .85;
+	var starcount = 25;
+	var maxDowntime = 6000;
+	var halfDowntime = maxDowntime/2;
+	var maxPower=Math.sqrt(47*speedMultiplier);
+	var minAngle = 5;
+	var maxAngle = 175;
+	var playerSize=15;
+	var clickTargetSize = playerSize+30;
+	var shieldSize = playerSize+12;
+	var canonSize = shieldSize+1;
+	var numPlayers = 2;
+	var humanPlayers = 1;
+	var disableStars=false;
+	var disableTrails=false;
+
+	function noTrails(){
+		disableTrails=!disableTrails;
+	}
+	function noStars(){
+		disableStars=!disableStars;
+	}
+	function drawMissileTrail(ctx,missile){
+		if(disableTrails)
+			return;
+		//if (missile.impact)
+		//	missile.trail.shift(); 
+
+		var drawMultipliers=[];
+		//ctx.beginPath();
+		//ctx.strokeStyle=colors[missile.color];
+		//ctx.lineWidth=2*scale;
+		//ctx.moveTo(transX(currentPlayer.canonVector.xv + currentPlayer.x), transY(currentPlayer.canonVector.yv + currentPlayer.y));
+		for (var t = 0; t < missile.trail.length; t++) {
+			//drawStar(ctx,missile.trail[t].x,missile.trail[t].y,missile.size/3,missile.color);
+			//if(calcdist(cx,cy,missile.trail[t].x, missile.trail[t].y) > worldSize+250 && !multi){
+			for (var m = drawMultipliers.length; m < shotMultipliers.length; m++) {
+				if (missile.trail[t].distance > shotMultipliers[m] && !drawMultipliers[m]) {
+					missile.multiDamage = m+2;
+					drawMultipliers.push({
+						x: missile.trail[t].x,
+						y: missile.trail[t].y,
+						multiplier: multiplyDots[missile.color][m]
+					});
+				}
+			}
+			if (t > missile.trail.length - 30 && !missile.impact) {
+				//draw the tracer
+				var t2 = 30 - (missile.trail.length - t);
+				ctx.globalAlpha = Math.min((t2 / 40).toFixed(2), 1);
+				//drawStar(ctx,missile.trail[t].x,missile.trail[t].y,missile.size*t2/40,colors[missile.color]);
+				if(!missile.impact)
+					drawCache2(ctx, dots[missile.color], missile.trail[t].x, missile.trail[t].y, t2 / 30,"tracer"+missile.color);
+			}
+			if (missile.impact) 
+				ctx.globalAlpha = Math.max(Math.min(1 - ((new Date()) - missile.impact) / keepTrailTime, 1), 0);
+			else 
+				ctx.globalAlpha = 1;
+			//draw the trail dot
+			//ctx.globalAlpha=1;
+			//drawCacheDot(ctx,missile.color,missile.trail[t].x, missile.trail[t].y);
+			drawCache2(ctx, tinyDots[missile.color], missile.trail[t].x, missile.trail[t].y, 1,"trail"+missile.color);
+			//ctx.moveTo(transX(missile.trail[t].x), transY(missile.trail[t].y));
+			//ctx.lineTo(transX(missile.trail[t].x+1), transY(missile.trail[t].y+1));
+		}
+		//ctx.stroke();
+		//draw the multipliers now
+		for (var m = 0; m < drawMultipliers.length; m++) {
+			if (missile.impact) 
+				ctx.globalAlpha = Math.max(Math.min(1 - ((new Date()) - missile.impact) / keepTrailTime, 1), 0);
+			else 
+				ctx.globalAlpha = 1;
+			drawCache2(ctx, drawMultipliers[m].multiplier, drawMultipliers[m].x, drawMultipliers[m].y, 1,"multiplier"+missile.color+"_"+m);
+		}
+	}
+	function drawMissile(ctx,missile){
+		ctx.globalAlpha = 1
+		//drawStar(ctx,missiles[i].x,missiles[i].y,missiles[i].size,colors[missiles[i].color]);
+		drawCache2(ctx, dots[missile.color], missile.x, missile.y, 1,"missile"+missile.color);
+	}
+	function missileThink(missile){
+		if(missile.impact || !missile.active)
+			return;
+		//console.log("missileThink");
+		missile.liveTime++;
+		//no impact draw missile
+		vector = calcForces(missile.x, missile.y);
+		missile.xv += vector.xv;
+		missile.yv += vector.yv;
+		missile.distance+=calcdist(missile.x,missile.y,missile.x+missile.xv,missile.y+missile.yv);
+		missile.x += missile.xv;
+		missile.y += missile.yv;
+		if (missile.liveTime % trailDensity == 0) {
+			missile.trail.push({
+				x: missile.x,
+				y: missile.y,
+				distance: missile.distance
+			});
+			currentPlayer.updateTitles=true;
+		}
+		var impactResult=checkImpact(missile.x,missile.y);
+		if(impactResult){
+			if(impactResult.indexOf("player") != -1){
+					impactMissile(missile, players[impactResult.split(" ")[1]]);
+			} else{
+					impactMissile(missile);
+			}
+		}
+		var dist = calcdist(cx, cy, missile.x, missile.y);
+		if (dist > width * 1.5 || missile.trail.length > maxShotTime) 
+			impactMissile(missile);
+
+	}
+	function drawMissileExplosion(ctx,missile){
+		var expTime = (new Date()) - missile.impact;
+		var expScale = Math.min(expTime /(explosionTime/2),1);
+		var expAlpha = 1-Math.min(expTime /(explosionTime),1);
+		ctx.globalAlpha=expAlpha;
+		drawCache2(ctx, bigDots[missile.color], missile.x, missile.y, expScale,"missileexplosion"+missile.color);
+	}
+	function thinkPlayerExplosion(player){
+		for (var y = 0; y < player.explosion.length; y++) {
+			if(!player.explosion[y].dead){
+				//var expTime = (new Date())-player.explosionStart;
+				//var expAlpha = Math.ceil(100-(expTime/explosionTime)*100)/100;
+				//ctx.globalAlpha = expAlpha;
+				//drawCache2(ctx, tinyDots[colors.length-1], player.explosion[y].x, player.explosion[y].y,.6,"playerexplosion");
+				var expForces=calcForces(player.explosion[y].x,player.explosion[y].y);
+				player.explosion[y].xv+=expForces.xv*.5;
+				player.explosion[y].yv+=expForces.yv*.5;
+				player.explosion[y].x+=player.explosion[y].xv;
+				player.explosion[y].y+=player.explosion[y].yv;
+				if(checkImpact(player.explosion[y].x,player.explosion[y].y))
+					player.explosion[y].dead=true;
+			}
+		}
+	}
+	function drawPlayerExplosion(ctx,player){
+		for (var y = 0; y < player.explosion.length; y++) {
+			if(!player.explosion[y].dead){
+				var expTime = (new Date())-player.explosionStart;
+				var expAlpha = Math.ceil(100-(expTime/explosionTime)*100)/100;
+				ctx.globalAlpha = expAlpha;
+				drawCache2(ctx, tinyDots[colors.length-1], player.explosion[y].x, player.explosion[y].y,.6,"playerexplosion");
+				//var expForces=calcForces(player.explosion[y].x,player.explosion[y].y);
+				//player.explosion[y].xv+=expForces.xv*.5;
+				//player.explosion[y].yv+=expForces.yv*.5;
+				//player.explosion[y].x+=player.explosion[y].xv;
+				//player.explosion[y].y+=player.explosion[y].yv;
+				//if(checkImpact(player.explosion[y].x,player.explosion[y].y))
+				//	player.explosion[y].dead=true;
+			}
+		}
+	}
+	function createPlayerExplosion(player){
+		var explodePlayer = player;
+		player.explosion=[]
+		player.explosionStart = new Date();
+		setTimeout(function(){
+			explodePlayer.explosion=[];
+		},explosionTime*2);
+		for(var y = 0;y<explodeParticleCount;y++){
+			var tempAngle = minAngle+Math.floor(Math.random()*(maxAngle-minAngle))
+			var expVector = calcvector(player2world(player, tempAngle), Math.floor(Math.random()*playerSize));
+			var expForce = calcvector(player2world(player, tempAngle), calcPower((1+Math.floor(Math.random()*6))/10));
+			player.explosion.push({
+				x:expVector.xv+player.x,
+				y:expVector.yv+player.y,
+				xv:expForce.xv,
+				yv:expForce.yv
+			});
+		}
+	}
+	function drawPlayer(ctx,player){
+		//draw the canon
+		if(player.canonVector)
+			drawLine(ctx, player.x, player.y, player.canonVector.xv + player.x, player.canonVector.yv + player.y, "#FFFFFF", 3)
+
+		//draw the player
+		drawCache2(ctx, objectCache["player"], player.x, player.y,1,"player"+player.number);
+
+		//draw the shield
+		ctx.globalAlpha = .8;
+		if (player.shield == 100) 
+			drawCache2(ctx, objectCache["shields"][player.number][0], player.x, player.y,1,"sheild"+0+"_"+player.number);
+		else if (player.shield >= 75) 
+			drawCache2(ctx, objectCache["shields"][player.number][1], player.x, player.y,1,"sheild"+1+"_"+player.number);
+		else if (player.shield >= 50) 
+			drawCache2(ctx, objectCache["shields"][player.number][2], player.x, player.y,1,"sheild"+2+"_"+player.number);
+		else if (player.shield >= 25) 
+			drawCache2(ctx, objectCache["shields"][player.number][3], player.x, player.y,1,"sheild"+3+"_"+player.number);
+	}
+	function updatePlayerTitles(player){
+		player.updateTitles=false;
+		var xoffset=0;
+		var ctx3;
+		if(!superCache["playertitles"+player.number]){
+			ctx3 = getNewCanvas(150, 200);
+			ctx3.font = "17px Impact";
+			ctx3.textBaseline = "top";
+			ctx3.lineWidth=1;
+			ctx3.textAlign = player.textPos.align.split(" ")[1];
+		}else{
+			ctx3=superCache["playertitles"+player.number];
+			ctx3.clearRect(0,0,150,200);
+		} 
+		ctx3.fillStyle = colors[player.number];
+		if(ctx3.textAlign == "right")
+			xoffset=140;
+		ctx3.fillText(player.name,10+xoffset, 30);
+		ctx3.fillStyle = "#FFFFFF";
+		ctx3.fillText("Shield: " + player.shield + "%", 10+xoffset, 50);
+		ctx3.fillText("Score: " + player.score, 10+xoffset, 70);
+		ctx3.fillText("Power:" + Math.floor(player.power * 100) + "%", 10+xoffset, 90);
+		ctx3.fillText("Angle: " + Math.round(player.angle) + Chr(186), 10+xoffset, 110);
+		if(player.activeMissile)
+			ctx3.fillText("Distance: " + Math.round(player.activeMissile.distance), 10+xoffset, 130);
+		for (var y = 0; y < player.messages.length; y++) 
+			ctx3.fillText(player.messages[y], 10+xoffset, 150 + y * 20);
+		if (currentPlayer == player) {
+			ctx3.fillStyle = "#00FF00";
+			ctx3.fillText("Your Turn!", 10+xoffset, 10);
+		}
+		superCache["playertitles"+player.number]=ctx3;
+	}
+	function drawPlayerTitles(ctx,player){
+		var ctx3 = superCache["playertitles"+player.number];
+		var xoffset=0;
+		if(player.textPos.align.split(" ")[1] == "right")
+			xoffset=-150;
+		ctx.drawImage(ctx3.canvas,player.textPos.x+xoffset, player.textPos.y);
+	}
+	function drawMainTitles(ctx){
+		ctx.fillStyle = "#FFFFFF";
+		ctx.textBaseline = "top";
+		ctx.textAlign = "center";
+		
+		currentTimeM = Math.floor(currentTime / 60000);
+		currentTimeS = Math.floor(currentTime % 60000 / 1000);
+		ctx.fillText("Game Time: " + pad(currentTimeM, 2) + ":" + pad(currentTimeS, 2), cx, 10);
+		ctx.fillText("Level: " + currentLevel, cx, 30);
+		ctx.fillText("Round: " + currentRound, cx, 50);
+		ctx.fillText("Turn: " + turnTime, cx, 70);
+		var avgTime = Math.floor(totalThinkTime / thinkArray.length);
+		
+		ctx.fillText("Frame Time: " + avgTime, cx, height - 20);
+		//ctx.fillText("Wait Time: " + waitTime, cx, height - 40);
+	}
+	function drawAimTrace(ctx){
+		var tempVector = calcvector(player2world(currentPlayer, currentPlayer.angle), calcPower(currentPlayer.power));
+		var tempx = currentPlayer.canonVector.xv + currentPlayer.x;
+		var tempy = currentPlayer.canonVector.yv + currentPlayer.y;
+		var tempxv = tempVector.xv; 
+		var tempyv = tempVector.yv;
+		var aimTrace=[];
+		for (var z = 0; z < maxAimTraceLength; z++) {
+			vector = calcForces(tempx, tempy);
+			tempxv += vector.xv;
+			tempyv += vector.yv;
+			tempx += tempxv;
+			tempy += tempyv;
+			if (z % 5 == 0) {
+				aimTrace.push({
+					x: tempx,
+					y: tempy
+				});
+			}
+			if (checkImpact(tempx, tempy)) 
+				break;
+			
+		}
+		for (var z = 0; z < aimTrace.length*aimTraceFadeDist; z++) {
+			//halfTrace = aimTraceLength*2;
+			//if(aimTraceLength>halfTrace)
+			ctx.globalAlpha = Math.max((aimTrace.length - z) / aimTrace.length, 0);
+			drawCache2(ctx, dots[colors.length], aimTrace[z].x, aimTrace[z].y, .5,"aim");
+			//drawStar(ctx,tempx,tempy,2,"#A0A0A0");
+			ctx.globalAlpha = 1;
+		}
+		
+	}
+	function drawStarTiles(ctx){
+		if(disableStars){
+			//ctx.fillStyle="#000000";
+			ctx.clearRect(0,0,width,height);
+			return;
+		}
+
+		//if(!superCache["background"] && starImg.loaded){
+			var ctx3 = ctx;
+			//var ctx3 = getNewCanvas(width, height);
+			//ctx3.fillStyle="#000000";
+			//ctx3.fillRect(0,0,width,height);
+
+			var tileWidth=256;
+			var halfTileWidth=tileWidth/2;
+			var xdiff = Math.ceil((width+tileWidth)/tileWidth);
+			var ydiff = Math.ceil((height+tileWidth)/tileWidth);
+			for(var x=0;x<=xdiff;x++){
+				for (var y = 0; y <=ydiff; y++) {
+					ctx3.drawImage(starTiles[0].canvas, Math.round(x * tileWidth-translateX*.05-halfTileWidth), Math.round(y * tileWidth-translateY*.05-tileWidth),tileWidth,tileWidth);
+				}
+			}
+			//superCache["background"]=ctx3.canvas;
+		//}
+		//ctx.drawImage(superCache["background"],0,0,height,width);
+
+	}
+
+
+	function getNewCanvas(width,height){
+		var newCanvas = document.createElement("canvas");
+		newCanvas.height=height;
+		newCanvas.width=width;
+		newCanvas.style.display="none";
+		newCanvas.style.visibility="hidden";
+		return newCanvas.getContext('2d');
+		
+	}
+
+	function calcPower(power){
+		return(power*maxPower);
+	}
+
+	function getColor() {
+	    //return colors[Math.floor(Math.random() * colors.length)];
+	    return Math.floor(Math.random() * colors.length);
+	}
+	function transX(x){
+		x+=translateX;
+		x*=scale;
+		return Math.round(x);		
+	}
+	function transY(y){
+		y+=translateY;
+		y*=scale;
+		return Math.round(y);		
+	}
+	function drawLine(ctx, x, y, x2, y2, color, width){
+
+		x+=translateX;
+		y+=translateY;
+		x*=scale;
+		y*=scale;
+
+		x2+=translateX;
+		y2+=translateY;
+		x2*=scale;
+		y2*=scale;
+
+		ctx.strokeStyle=color;
+		ctx.lineWidth = width*scale;
+	    ctx.beginPath();
+	    ctx.moveTo(x,y);
+	    ctx.lineTo(x2,y2);
+	    ctx.stroke();
+	}
+	function drawDashedStar(ctx, x, y, size, dashLength, dotLength, color, width){
+		x+=translateX;
+		y+=translateY;
+		x*=scale;
+		y*=scale;
+		size*=scale;
+		dashLength*=scale;
+		dotLength*=scale;
+
+		ctx.lineWidth=(width||2)*scale;
+	    ctx.strokeStyle = color;
+	    ctx.beginPath();
+		circ = size*Math.PI;
+	    var n = circ/(dashLength+dotLength),
+			n2 = circ/(dashLength),
+	        alpha1 = Math.PI * 2 / n,
+	        alpha2 = Math.PI * 2 / n2;
+			//console.log(alpha1,alpha2);
+	    for(var i=0;i<=n;i++ )
+	    {
+	        var theta = alpha1 * i,
+	            theta2 = theta+alpha2;
+	        ctx.moveTo((Math.cos(theta) * size) + x, (Math.sin(theta) * size) + y);
+	        ctx.lineTo((Math.cos(theta2) * size) + x, (Math.sin(theta2) * size) + y);
+	        ctx.stroke();
+	    }              
+	    ctx.closePath();
+	}
+
+	function clearBox(ctx, x, y, height, width){
+		x+=translateX;
+		y+=translateY;
+		x*=scale;
+		y*=scale;
+		var tempWidth=scale*width;
+		var tempHeight=scale*height;
+		x -=tempWidth/2;
+		y -=tempHeight/2;
+		ctx.clearRect(x,y,tempWidth,tempHeight);
+
+	}
+	/*function drawCacheNT(ctx, cache, x, y, shrink){
+		var tempWidth=cache.width*shrink;
+		var tempHeight=cache.height*shrink;
+		x -=tempWidth/2;
+		y -=tempHeight/2;
+
+		if(x < -tempWidth || x>width+tempWidth || y < -tempHeight || y>height+tempHeight)
+			return;
+		x=x|0;
+		y=y|0;
+		ctx.drawImage(cache,x,y,tempWidth,tempHeight);
+	}*/
+
+	/*function drawCacheDot(ctx, color, x, y){
+	var tempScale=scale*100|0
+		cache = tinyDots[color];
+		if(!scaleTable[tempScale])
+			scaleTable[tempScale]=[];
+		x+=translateX;
+		y+=translateY;
+		x*=scale;
+		y*=scale;
+		var tempWidth=(cache.width*tempScale/100)|0;
+		var tempHeight=(cache.height*tempScale/100)|0;
+		x -=tempWidth/2;
+		y -=tempHeight/2;
+
+		if(x < -tempWidth || x>width+tempWidth || y < -tempHeight || y>height+tempHeight)
+			return;
+		x=x|0;
+		y=y|0;
+		
+		if (!scaleTable[tempScale][color]) {
+			var ctx3 = getNewCanvas(tempWidth, tempHeight);
+			ctx3.drawImage(cache,0,0,tempWidth,tempHeight);
+			scaleTable[tempScale][color]=ctx3.canvas;
+
+		}
+			ctx.drawImage(scaleTable[tempScale][color], x, y);
+
+	}*/
+	function drawCache2(ctx,cache, x, y,shrink,key){
+		shrink = shrink || 1;
+		var tempScale=Math.round(scale*shrink*100);
+
+		x+=translateX;
+		y+=translateY;
+		x*=scale;
+		y*=scale;
+		var tempWidth=Math.round(cache.width*tempScale/100);
+		var tempHeight=Math.round(cache.height*tempScale/100);
+		//var tempWidth=(cache.width*tempScale)|0;
+		//var tempHeight=(cache.height*tempScale)|0;
+		x -=tempWidth/2;
+		y -=tempHeight/2;
+		x=Math.round(x);
+		y=Math.round(y);
+
+		if(tempHeight == 0 || tempWidth == 0 || x < -tempWidth || x>width+tempWidth || y < -tempHeight || y>height+tempHeight)
+			return;
+		if(!superCache[key])
+			superCache[key]=[];
+		if (!superCache[key][tempScale]) {
+			var ctx3 = getNewCanvas(tempWidth, tempHeight);
+			ctx3.drawImage(cache,0,0,tempWidth,tempHeight);
+			superCache[key][tempScale]=ctx3.canvas;
+
+		}
+			ctx.drawImage(superCache[key][tempScale], x, y);
+			
+	}
+	function drawCache(ctx,cache, x, y,shrink){
+		shrink = shrink || 1;
+		var tempScale=scale*shrink;
+
+		x+=translateX;
+		y+=translateY;
+		x*=scale;
+		y*=scale;
+		var tempWidth=Math.round(cache.width*tempScale);
+		var tempHeight=Math.round(cache.height*tempScale);
+		//var tempWidth=(cache.width*tempScale)|0;
+		//var tempHeight=(cache.height*tempScale)|0;
+		x -=tempWidth/2;
+		y -=tempHeight/2;
+
+		if(x < -tempWidth || x>width+tempWidth || y < -tempHeight || y>height+tempHeight)
+			return;
+		x=Math.round(x);
+		y=Math.round(y);
+		
+		if(tempWidth == 1)
+			ctx.drawImage(cache,x,y);
+		else
+			ctx.drawImage(cache,x,y,tempWidth,tempHeight);
+	}
+	function drawStar(ctx,x,y,size,color,color2,width){
+		x+=translateX;
+		y+=translateY;
+		x*=scale;
+		y*=scale;
+		size*=scale;
+	
+		ctx.lineWidth=width*scale;
+		ctx.fillStyle=color;
+		ctx.strokeStyle=color2||color;
+		ctx.beginPath();
+		ctx.arc(x, y, size, 0, Math.PI*2, true); 
+		ctx.closePath();
+		ctx.fill();
+		if(color2)
+		ctx.stroke();
+	}
+	function drawPlaceHolder(ctx,x,y,color){
+		return;
+		x+=translateX;
+		y+=translateY;
+		x*=scale;
+		y*=scale;
+		//size*=scale;
+		adjust=8*scale;
+
+
+		size=5
+		ctx.lineWidth=3;
+		ctx.fillStyle=color;
+		//ctx.strokeStyle=color2||color;
+		ctx.beginPath();
+		//ctx.arc(x, y, size, 0, Math.PI*2, true);
+		if (y == 5) {
+			ctx.lineTo(x + 8, y + 8);
+			ctx.lineTo(x - 8, y + 8);
+		}else if(y==height-5){
+			ctx.lineTo(x+8,y-8); 
+			ctx.lineTo(x-8,y-8); 
+		}else if(x==5){
+			ctx.lineTo(x+8,y+8); 
+			ctx.lineTo(x+8,y-8); 
+		}else if(x==width-5){
+			ctx.lineTo(x-8,y+8); 
+			ctx.lineTo(x-8,y-8); 
+		}
+		ctx.lineTo(x,y); 
+		ctx.closePath();
+		ctx.fill();
+	}
+		function checkImpact(x, y,future){
+			var future=future||0
+			for (var i = 0; i < players.length; i++) {
+				if(players[i].state!="loser"){
+					var playerDist = calcdist(players[i].x, players[i].y, x, y);
+					var tmpPlayerSize=playerSize+3
+					if(players[i].shield >=0)
+						tmpPlayerSize=shieldSize+3;
+					if(playerDist < tmpPlayerSize)
+						return "player "+i;
+				}
+			}
+			for (var i = 0; i < moons.length; i++) {
+				
+				if(future && moons[i].speed){
+					var dir = calcdir(cx, cy, moons[i].x, moons[i].y);
+					var dist = calcdist(cx, cy, moons[i].x, moons[i].y);
+					dir+=(moons[i].speed/10)*future;
+					vector = calcvector(dir,dist);
+					tempx=vector.xv+cx;
+					tempy=vector.yv+cy;
+					var dist = calcdist(tempx,tempy, x, y);
+				} else {
+					var dist = calcdist(moons[i].x,moons[i].y, x, y);
+				}
+
+
+				if(dist<moons[i].size+3)
+					return "moon "+i+" ";
+			}
+			var dist = calcdist(cx, cy, x, y);
+			if(dist<worldSize)
+				return "world";
+			return false;
+		}
+		function player2world(player,angle){
+			return constrain(angle+player.playerAngle);
+		}
+		function world2player(player,angle){
+			return constrain(angle-player.playerAngle);
+		}
+		function calcForces(x,y){
+			var outVector={
+				xv:0,
+				yv:0
+			};
+			//lets start with the world
+
+			var distsqr = calcdistsquared(cx, cy, x, y);
+			var scale = force / (distsqr) * -1;
+			var oodist = 1.0 / Math.sqrt(distsqr);
+			var unitvx = (x - cx) * oodist;
+			var unitvy = (y - cy) * oodist;
+			outVector.xv += unitvx * scale;
+			outVector.yv += unitvy * scale;
+
+			for (var i = 0; i < moons.length; i++) {
+				var force2 = (moons[i].size*moonForceMultiplier)*speedMultiplier;
+				var distsqr = calcdistsquared(moons[i].x, moons[i].y, x, y);
+				var scale = force2 / (distsqr) * -1;
+				var oodist = 1.0 / Math.sqrt(distsqr);
+				var unitvx = (x - moons[i].x) * oodist;
+				var unitvy = (y - moons[i].y) * oodist;
+				outVector.xv += unitvx * scale;
+				outVector.yv += unitvy * scale;
+			}
+			return outVector;
+
+		}
+		function setPlayerMessage(message,player){
+			player.messages.push(message);
+			player.updateTitles=true;
+			setTimeout(function(){
+				player.messages.shift();
+				player.updateTitles=true;
+			},5000);
+		}
+		function newStar(stars,xmax,ymax){
+			stars.push({
+				//x:width-Math.floor(Math.random() * (width*2)),
+				//y:height-Math.floor(Math.random() * (height*2)),
+				x:Math.floor(Math.random() * xmax),
+				y:Math.floor(Math.random() * ymax),
+				xv:Math.random()*5/15,
+				yv:0,
+				size:1+Math.floor(Math.random() * 3)
+			});
+			
+		}
+		function newMissile(x,y,velocity,direction){
+			tempDirection=player2world(currentPlayer,direction);
+			var canonVector =calcvector(tempDirection,canonSize);
+			var shotVector = calcvector(tempDirection,velocity);
+			missiles.push({
+				xv:shotVector.xv,
+				yv:shotVector.yv,
+				x:x+canonVector.xv,
+				y:y+canonVector.yv,
+				color:getColor(),
+				//size:5+Math.floor(Math.random()*5),
+				size:5,
+				active:1,
+				trail:[],
+				distance:0,
+				created:new Date(),
+				liveTime:0				
+			});
+			return missiles[missiles.length-1];
+		}
+		function impactMissile(missile,player){
+			if(!missile.impact){
+				maxDamage=(missile.multiDamage||1)*minDamage;
+				//console.log(currentPlayer.angle,power,missiles[i].x,missiles[i].y,missiles[i].trail.length);
+				
+				if(typeof player != "undefined"){
+					//players[hit].shield-=25;
+					takeDamage(player,maxDamage,true);
+				} else {
+					for (var x = 0; x < players.length; x++) {
+						if(players[x].shield>=0)
+							var playerDist = calcdist(players[x].x, players[x].y, missile.x, missile.y)-shieldSize-3;
+						else
+							var playerDist = calcdist(players[x].x, players[x].y, missile.x, missile.y)-playerSize-3;
+						if(playerDist < explosionSize){
+							//console.log("player",x,"dist",playerDist);
+							//players[x].shield-=Math.floor((playerDist-playerSize)/3);
+							distModifier=1-playerDist/explosionSize;
+							//console.log(playerDist,distModifier);
+							var damage = maxDamage*distModifier;
+							//console.log("damage",damage);
+							takeDamage(players[x],Math.floor(damage));
+						}
+					}
+				}
+
+				//currentPlayer++;
+				//if(currentPlayer >= players.length)
+				//	currentPlayer = 0;
+				//currentRound++;
+				if(currentPlayer.state == "firing")
+					currentPlayer.state="idle";
+				currentPlayer.activeMissile=null;
+				nextRound();				
+				missile.xv=0;
+				missile.yv=0;
+				setTimeout(function(){
+					for(var x=0;x<missiles.length;x++)
+					{
+						if(missiles[x]===missile){
+							missiles.splice(x,1);
+							return;
+						}
+					}
+				},keepTrailTime)
+				missile.impact=new Date();				
+			}
+		}
+		function takeDamage(player,damage,directHit){
+
+			player.shield-=damage;
+			if(currentPlayer==player){
+				setPlayerMessage("Ouch! That hurt!",player);
+			} else if(directHit) {
+				setPlayerMessage("Direct hit!",currentPlayer);
+			} else {
+					setPlayerMessage("Secondary Damage!",player);
+			}
+			if(damage > 25 && player.shield < 0 && player.shield > -50)
+				player.shield=0;
+
+
+			if(player.shield < 0)
+			{
+				player.state="loser";
+				player.shield=0;
+				var loserCount=0;
+				var winner=0;
+				for (var x = 0; x < players.length; x++) {
+					if(players[x].state=="loser")
+						loserCount++;
+					else
+						winner = players[x];
+				}
+				currentPlayer.score++;
+				if(loserCount == players.length-1){
+					winner.state="winner";
+					centerMessage="Player "+(winner.number+1)+" wins!! \n Click to continue.";
+					setTimeout(function(){pauseState=true;pauseTime=new Date()},explosionTime*2);
+				}
+
+			}
+		}
+		function mouseMove(e){
+			if(!currentPlayer.human)
+				return;
+			mouseX = e.pageX-10;
+			mouseY = e.pageY-10;
+			mouseAngle = calcdir(currentPlayer.x,currentPlayer.y,mouseX,mouseY);
+			currentPlayer.angle=constrain(mouseAngle-currentPlayer.playerAngle);
+			if(currentPlayer.angle < minAngle || currentPlayer.angle > maxAngle){
+				if(currentPlayer.angle < minAngle || currentPlayer.angle > 270)
+					currentPlayer.angle=minAngle;
+				else
+					currentPlayer.angle=maxAngle;
+			}
+			var canonVector = calcvector(player2world(currentPlayer, currentPlayer.angle), canonSize);
+			currentPlayer.canonVector = {
+				xv:canonVector.xv,
+				yv:canonVector.yv
+			};
+			currentPlayer.updateTitles=true;
+
+		}
+		function mouseDown(e){
+			var tempx=currentPlayer.x;
+			var tempy=currentPlayer.y;
+			tempx+=translateX;
+			tempy+=translateY;
+			tempx*=scale;
+			tempy*=scale;
+
+			
+			playerDist=calcdist(tempx,tempy,e.pageX-10,e.pageY-10);
+			if(currentPlayer.state=="idle" && !pauseState && playerDist < clickTargetSize){
+				currentPlayer.state="aiming";
+				downstart = {
+					time:new Date(),
+					x:e.pageX-10,
+					y:e.pageY-10
+				}
+				
+			}
+		}
+		function mouseUp(e){
+			//newStar(e.clientX-10,e.clientY-10,((new Date())-downstart)/100);
+			if(downstart){
+				currentPlayer.state="firing";
+				currentPlayer.activeMissile=newMissile(currentPlayer.x,currentPlayer.y,calcPower(currentPlayer.power),currentPlayer.angle);
+			}
+			downstart = null;
+
+			if(centerMessage && centerMessage.indexOf("win") != -1){
+				currentLevel++
+				resetGame(currentLevel)
+			}
+
+			if (pauseState) {
+				pauseGame();
+			}				
+		}
+		function pauseGame(){
+			if(!pauseState){
+				setTimeout(function(){pauseState=true;pauseTime=new Date()},20);
+				centerMessage="Pause";
+			} else {
+				//gameTime-=(new Date())-pauseTime;
+				//roundTime-=(new Date())-pauseTime;
+				var pauseLength=(new Date())-pauseTime;
+				gameTime.setMilliseconds(gameTime.getMilliseconds()+pauseLength);
+				roundTime.setMilliseconds(roundTime.getMilliseconds()+pauseLength);
+				pauseState=false;
+				centerMessage=null;
+			}
+		}
+		function perfectShot(angle,power){
+			var result;
+			//var power=maxPower*.1;
+			//var lastDist,minDist=1000;
+			var power=power||.85;
+			var angle=angle||15;
+
+			for (var tries = 0; tries < 16500; tries++) {
+				tempDirection=player2world(currentPlayer,angle);
+				var canonVector =calcvector(tempDirection,canonSize);
+				var shotVector = calcvector(tempDirection,calcPower(power));
+
+				var tempx=canonVector.xv+currentPlayer.x,
+					tempy=canonVector.yv+currentPlayer.y,
+					tempxv=shotVector.xv,
+					tempyv=shotVector.yv;
+				
+				for (var z = 0; z < 800; z++) {
+					vector = calcForces(tempx, tempy);
+					tempxv += vector.xv;
+					tempyv += vector.yv;
+					tempx += tempxv;
+					tempy += tempyv;
+
+					//if(z%4==0)
+						//drawStar(ctx,tempx,tempy,2,"#A0A0A0");
+					result = checkImpact(tempx, tempy,z+2);
+					if (result) {
+						break;
+					}
+				}
+				if(result=="player 0")
+					break
+
+				/*var playerDist = calcdist(players[1].x, players[1].y, tempx,tempy);
+
+				minDist = Math.min(minDist,playerDist)
+				if(minDist<playerDist)
+					console.log(minDist);*/
+				
+
+				angle+=1;
+				if(angle>maxAngle){
+					angle=minAngle;
+					power+=.01;	
+				}
+			}
+			//console.log(result,angle,power,tempx,tempy);
+			//if(result && result.indexOf("player 1")!=-1)
+			//	newMissile(currentPlayer.x,currentPlayer.y,power/10,angle);
+			if(result && result.indexOf("player 0")!=-1){
+				//console.log(result);
+				return {result:result,angle:angle,power:power};
+			}
+			return false;
+		}
+		function aiThink(player){
+			if(player.state!="idle" && player.state!="aiming")
+				return;
+			if(!player.desiredAngle){
+				player.state="aiming";
+				player.thinkTime = 0;
+				perfect=perfectShot();
+				//console.log(perfect);
+				player.angle=15;
+				var canonVector = calcvector(player2world(currentPlayer, currentPlayer.angle), canonSize);
+				currentPlayer.canonVector = {
+					xv:canonVector.xv,
+					yv:canonVector.yv
+				};
+				if (perfect) {
+					marginError = -10+Math.floor(Math.random()*20);
+					multiplier = 1+marginError/100;
+					player.desiredAngle = perfect.angle*multiplier;
+					player.desiredPower = perfect.power*multiplier;
+				} else {
+					tempAngle=Math.floor(Math.random()*100);
+					if(tempAngle <50)
+						tempAngle+=15
+					else
+						tempAngle+=75;
+					player.desiredAngle=tempAngle;
+					//power = calcpower(200+Math.floor(Math.random()*worldSize));
+					//power = calcPower((25+Math.floor(Math.random()*75))/100);
+					player.desiredPower = calcPower((25+Math.floor(Math.random()*75))/100);
+				}
+			} else {
+				player.thinkTime++;
+			}
+			if(player.angle <= player.desiredAngle){
+				//player.angle+=0.5;
+				player.angle+=1;
+				//playerAngle = calcdir(cx,cy,player.x,player.y)+90;
+				//mouseAngle=player.currentAngle+playerAngle;
+				//currentPlayer.angle=Math.abs(Math.round(playerAngle));
+				//mouseVector =calcvector(mouseAngle,30);
+				var canonVector = calcvector(player2world(currentPlayer, currentPlayer.angle), canonSize);
+				currentPlayer.canonVector = {
+					xv:canonVector.xv,
+					yv:canonVector.yv
+				};
+
+			} else if(player.thinkTime>60) {
+				//power = calcpower(200+Math.floor(Math.random()*worldSize));
+				//player.power=power;
+				
+				player.power=player.desiredPower;
+				player.state="firing";
+				currentPlayer.activeMissile=newMissile(player.x,player.y,calcPower(player.power),player.angle);
+				player.desiredAngle=null;
+				player.desiredPower=null;
+				//player.currentAngle=null;
+
+			}
+			
+		}
+		function resetGame(level){
+			scale=1;
+			translateX=0;
+			translateY=0;
+			var level = Math.min(level||1,10);
+			var mooncount=levels[level-1].moons;
+			worldSize=50+levels[level-1].size+Math.floor(Math.random()*10);
+
+			var ctx3 = getNewCanvas(worldSize*2+3, worldSize*2+3);
+			drawStar(ctx3,worldSize+1,worldSize+1,worldSize,"#000000","#FFFFFF",3);
+			objectCache["world"]=ctx3.canvas;
+
+
+			force = (worldSize*forceMultiplier)*speedMultiplier;
+			moons=[];
+			var lastAngle = 0;
+			moonDiff = 360/mooncount;
+			for(var i=0;i<mooncount;i++){
+				var size = 20+Math.floor(Math.random()*20);
+				var dist = worldSize+size+moonDistance+Math.floor(Math.random()*20);
+				moonAngle = lastAngle+moonDiff+(80-Math.floor(Math.random()*160))
+				moonVector = calcvector(moonAngle,dist+size);
+				lastAngle = moonAngle;
+				speed=0
+				var ctx3 = getNewCanvas(size*2+3, size*2+3);
+				drawStar(ctx3,size+1,size+1,size,"#000000","#FFFFFF",2);
+
+				if(levels[level-1].orbit)
+					speed=1
+				moons.push({
+					x:moonVector.xv+cx,
+					y:moonVector.yv+cy,
+					size:size,
+					speed:speed,
+					cache:ctx3.canvas
+				})
+			}
+	
+			//stars=[];
+			//starTiles[0].fillStyle = "#000000";
+			//starTiles[0].fillRect(0,0,400,400)
+			/*for(var i=0;i<starcount;i++){
+				newStar(stars,400,400);
+				drawCacheNT(starTiles[0], dots[colors.length], stars[stars.length-1].x, stars[stars.length-1].y, stars[stars.length-1].size / 8);
+			}*/
+
+			//starTiles[1] = new Image();
+			//starTiles[1].src="images/Stars1.png"
+			//starPattern=ctx.createPattern(starTiles[1],"repeat");
+			/*starTiles[1] = new Image();
+			starTiles[1].src="images/Stars2.png"
+			starTiles[2] = new Image();
+			starTiles[2].src="images/Stars3.png"*/
+				
+			var angleStart = Math.floor(Math.random()*360);
+			for (var x = 0; x < players.length; x++) {
+				var angleIncrement = 360/players.length;
+				var setAngle = constrain(angleStart+angleIncrement*x);
+				//var setAngle = 255;
+				var playerAngle=setAngle+Math.floor(Math.random()*30);
+				var playerVector = calcvector(playerAngle,worldSize);
+				players[x].x=playerVector.xv+cx;
+				players[x].y=playerVector.yv+cy;
+				players[x].playerAngle=playerAngle-90;
+				players[x].shield=100;
+				players[x].power=0;
+				players[x].angle=15;
+				players[x].messages=[];
+				players[x].state="idle";
+				players[x].updateTitles=true;
+			}
+			missiles = [];
+			gameTime = new Date();
+			roundTime = new Date();
+			currentRound=1;
+			currentPlayer=players[0];
+			pauseState=false;
+			centerMessage=null;
+		}
+		function nextRound(){
+				//console.log("nextround");
+				currentRound++;
+				if(players[currentPlayer.number+1])
+					currentPlayer=players[currentPlayer.number+1];
+				else
+					currentPlayer=players[0];
+				//currentPlayer++;
+				roundTime = new Date();
+				//if(currentPlayer >= players.length)
+				//	currentPlayer = 0;
+				for(var x =0; x< players.length;x++)
+					players[x].updateTitles=true;
+		}
+		
+		
+	//document.getElementById("overlay").width=width;
+	//document.getElementById("overlay").height=height;
+	//document.getElementById("background").width=width;
+	//document.getElementById("background").height=height;
+	//console.log(window.innerWidth);
+	
+
+
+	function init(){
+		height = window.innerHeight;//-30;
+		width = window.innerWidth;//-30;
+		//height = 480;//-30;
+		//width = 640;//-30;
+		cx = width /2
+		cy = height /2
+
+		positions=[
+			{
+				x:10,
+				y:10,
+				align:"top left"
+			},
+			{
+				x:width-10,
+				y:10,
+				align:"top right"
+			},
+			{
+				x:width-10,
+				y:height-110,
+				align:"top right"
+			},
+			{
+				x:10,
+				y:height-110,
+				align:"top left"
+			},
+		];
+
+
+		document.getElementById("universe").width=width;
+		document.getElementById("universe").height=height;
+
+		document.getElementById("universe").addEventListener("touchstart",function(event){
+			var e={}
+			e.pageX = event.touches[0].pageX;
+			e.pageY = event.touches[0].pageY;
+
+			//document.getElementById("log").value="start "+e.pageX+" "+e.pageY+"\n"+document.getElementById("log").value;
+			event.preventDefault();
+			mouseDown(e);
+		},false);
+		document.getElementById("universe").addEventListener("touchmove",function(event){
+			var e={}
+			e.pageX = event.touches[0].pageX;
+			e.pageY = event.touches[0].pageY;
+
+			//document.getElementById("log").value="move "+e.pageX+" "+e.pageY+"\n"+document.getElementById("log").value;
+			event.preventDefault();
+			mouseMove(e);
+		},false);
+		document.getElementById("universe").addEventListener("touchend",function(event){
+
+			//document.getElementById("log").value="stop\n"+document.getElementById("log").value;
+			event.preventDefault();
+			mouseUp();
+		},false);
+		document.onmousemove=mouseMove;
+		document.getElementById("universe").onmousedown=mouseDown;
+		document.getElementById("universe").onmouseup=mouseUp;
+		canvas = document.getElementById("universe");
+		ctx = canvas.getContext("2d");
+		//ctx.scale(.5,1);
+		ctx.font = "17px Impact";
+			starTiles[0]=getNewCanvas(256,256);
+			//starTiles[0]=getNewCanvas(width+512,height+512);
+			starImg = new Image();
+			starImg.src="images/Stars8.png";
+			starImg.onload=function(){
+				/*var xdiff = Math.ceil((width+512)/512);
+				var ydiff = Math.ceil((height+512)/512);
+				for(var x=0;x<=xdiff;x++){
+					for (var y = 0; y <=ydiff; y++) {
+						starTiles[0].drawImage(starImg,x * 512|0,y * 512|0);
+					}
+				}*/
+				starTiles[0].drawImage(starImg,0,0);
+				starImg.loaded=true;
+			};
+			/*starTiles[1]=getNewCanvas(400,400);
+			var starImg2 = new Image();
+			starImg2.src="images/Stars2.png";
+			starImg2.onload=function(){
+				starTiles[1].drawImage(starImg2,0,0);
+			};
+			starTiles[2]=getNewCanvas(400,400);
+			var starImg3 = new Image();
+			starImg3.src="images/Stars3.png";
+			starImg3.onload=function(){
+				starTiles[2].drawImage(starImg3,0,0);
+			};*/
+
+		//var background = document.getElementById("background");
+		//var bctx = background.getContext("2d");
+		//var overlay = document.getElementById("overlay");
+		//var octx = overlay.getContext("2d");
+		ctx.lineCap="round";
+		for(var x=0;x<numPlayers;x++){
+			players.push(playerDefaults.clone());
+			players[x].textPos=positions[x];
+			players[x].name+=numNames[x];
+			players[x].number=x;
+			if(x<humanPlayers)
+				players[x].human=true;
+			else
+				players[x].computer=true;
+		}
+		objectCache["shields"]=[];
+		
+		for (var x = 0; x < colors.length; x++) {
+			var ctx3 = getNewCanvas(13, 13);
+			drawStar(ctx3, 6, 6, 5, colors[x]);
+			dots.push(ctx3.canvas);
+
+			var ctx3 = getNewCanvas(explosionSize*2+3, explosionSize*2+3);
+			drawStar(ctx3, explosionSize+1, explosionSize+1, explosionSize, colors[x]);
+			bigDots.push(ctx3.canvas);
+
+			var ctx3 = getNewCanvas(5, 5);
+			drawStar(ctx3, 2, 2, 2, colors[x]);
+			tinyDots.push(ctx3.canvas);
+
+
+			objectCache["shields"][x]=[];
+			var ctx3 = getNewCanvas(shieldSize*2+3, shieldSize*2+3);
+			drawStar(ctx3,shieldSize+1,shieldSize+1,shieldSize,"rgba(0,0,0,0)",colors[x],3);
+			objectCache["shields"][x][0]=ctx3.canvas;
+
+			var ctx3 = getNewCanvas(shieldSize*2+3, shieldSize*2+3);
+			drawDashedStar(ctx3,shieldSize+1,shieldSize+1,shieldSize,4,2,colors[x],2);
+			objectCache["shields"][x][1]=ctx3.canvas;
+
+			var ctx3 = getNewCanvas(shieldSize*2+3, shieldSize*2+3);
+			drawDashedStar(ctx3,shieldSize+1,shieldSize+1,shieldSize,4,4,colors[x],2);
+			objectCache["shields"][x][2]=ctx3.canvas;
+
+			var ctx3 = getNewCanvas(shieldSize*2+3, shieldSize*2+3);
+			drawDashedStar(ctx3,shieldSize+1,shieldSize+1,shieldSize,2,6,colors[x],2);
+			objectCache["shields"][x][3]=ctx3.canvas;
+			multiplyDots[x]=[];
+			for(var m=0;m<shotMultipliers.length;m++){
+				var ctx3 = getNewCanvas(29, 29);
+				ctx3.font = "15px Impact";
+				ctx3.textBaseline = "middle";
+				ctx3.textAlign = "center";
+				drawStar(ctx3, 12, 12, 11,"rgba(0,0,0,1)",colors[x],2);
+				ctx3.fillStyle=colors[x];
+				ctx3.fillText((m+2)+"x",12,12);
+				multiplyDots[x].push(ctx3.canvas);
+			}
+
+
+		}
+			var ctx3 = getNewCanvas(13, 13);
+			drawStar(ctx3, 6, 6, 5, "#c0c0c0");
+			dots.push(ctx3.canvas);
+
+			var ctx3 = getNewCanvas(playerSize*2+3, playerSize*2+3);
+			drawStar(ctx3,playerSize+1,playerSize+1,playerSize,"#000000","#FFFFFF",2);
+			objectCache["player"]=ctx3.canvas;
+
+
+
+
+		
+		resetGame();
+		function gameLoop(){
+			gameLoopStart = new Date();
+		    var lt= gameLoopStart-gameLoopEnd;
+			frameBuffer += lt;
+			while (frameBuffer >=FRAME_TIME){
+				//console.log("think");
+				gameThink();
+				frameBuffer -=FRAME_TIME;
+			}
+			//console.log("draw");
+			gameDraw();
+			//gameLoop();
+			//console.log(Math.min(Math.max(25-thinkTime,1),25));
+			//setTimeout(gameLoop,25);
+			//waitTime = Math.min(Math.max(25-thinkTime,1),25);
+			var waitTime=0;
+			setTimeout(gameLoop,waitTime);
+			gameLoopEnd = new Date();
+		}
+		gameLoop();
+		
+		function gameThink(){
+			if(scale != desiredScale){
+				scaleDiff = (desiredScale-scale)/(50/speedMultiplier);
+				scale+=scaleDiff;
+				//scale=Math.round(scale*1000)/1000;
+			}
+
+			if (pauseState) 
+				return;
+			turnTime = Math.max(maxTurnTime - Math.floor(((new Date()) - roundTime) / 1000), 0);
+
+			if (turnTime == 0 && currentPlayer.state == "idle"){
+				console.log(turnTime,currentPlayer.state);
+				nextRound();
+				
+			} 
+			
+			
+			if (currentPlayer.computer) 
+				aiThink(currentPlayer);
+
+			for (var i = 0; i < players.length; i++) {
+				if(players[i].explosion && players[i].explosion.length)
+					thinkPlayerExplosion(players[i])
+			}
+
+			for (var i = 0; i < missiles.length; i++) {
+				//if (missiles[i].active != 0) {
+					//if (!missiles[i].impact) {
+						//calculate missile position
+						missileThink(missiles[i]);
+					//}
+				//}
+			}
+			for (var i = 0; i < moons.length; i++) {
+				var dir = calcdir(cx, cy, moons[i].x, moons[i].y);
+				var dist = calcdist(cx, cy, moons[i].x, moons[i].y);
+				dir += moons[i].speed / 10;
+				vector = calcvector(dir, dist);
+				moons[i].x = vector.xv + cx;
+				moons[i].y = vector.yv + cy;
+				drawCache2(ctx, moons[i].cache, moons[i].x, moons[i].y,1,"moon"+moons[i].size);
+			}
+
+		}
+		function gameDraw(){
+			var thinkStart = new Date();
+			if (pauseState) 
+				return;
+			currentTime = (new Date()) - gameTime;
+			//turnTime = Math.max(maxTurnTime - Math.floor(((new Date()) - roundTime) / 1000), 0);
+			
+			//scale = 1;
+			//translateX = 0;
+			//translateY = 0;
+			translateX = cx * (1 / scale) - cx;
+			translateY = cy * (1 / scale) - cy;
+
+			if(currentPlayer.state == "idle"){
+				desiredScale = defaultScale;
+			} else if(currentPlayer.state == "aiming"){
+				desiredScale = .6;
+			} else if(currentPlayer.state == "firing"){
+					desiredScale = 1.2;
+					
+					distX = Math.abs(cx-currentPlayer.activeMissile.x)*desiredScale;
+					distY = Math.abs(cy-currentPlayer.activeMissile.y)*desiredScale;
+					if(distX>width || distY>height){
+						desiredScale=Math.floor(Math.min(width/distX,height/distY)*10)/10;
+						//console.log("outside",desiredScale);
+					}
+					translateX -= (currentPlayer.activeMissile.x - cx)/2;
+					translateY -= (currentPlayer.activeMissile.y - cy)/2;
+					//translateX = cx * (1 / scale) - cx - (currentPlayer.activeMissile.x - cx);
+					//translateY = cy * (1 / scale) - cy - (currentPlayer.activeMissile.y - cy);
+			}
+
+			//if(scale != desiredScale){
+			//	scaleDiff = (desiredScale-scale)/(50/speedMultiplier);
+			//	scale+=scaleDiff;
+			//	//scale=Math.round(scale*1000)/1000;
+			//}
+
+
+			
+			
+
+
+			//ctx.fillStyle = "#000000";
+			//ctx.fillStyle=starPattern
+			//ctx.fillRect(0,0,width,height);
+			//ctx.clearRect(0, 0, width, height);
+			//for(var x=0;x<50;x++){
+			//		ctx.globalAlpha=1-x/50;
+			//		drawStar(ctx,300,300,x,"#0000FF");
+			//}
+			
+			//draw the star tiles
+			drawStarTiles(ctx);
+			
+
+			if (downstart && mouseX && mouseY) {
+				//var downtime = ((new Date()) - downstart.time) % maxDowntime;
+				//if (downtime > halfDowntime) 
+				//	downtime = halfDowntime - (downtime - halfDowntime);
+				
+				//power = calcpower(downtime);
+				
+				//var powerDist = calcdist(mouseX,mouseY,downstart.x,downstart.y);
+				//var powerDist = Math.sqrt(calcdist(mouseX, mouseY, currentPlayer.x, currentPlayer.y));
+				var powerDist = Math.sqrt(calcdist(mouseX, mouseY, currentPlayer.x, currentPlayer.y));
+				var maxDist = Math.sqrt(Math.min(cx,cy)*.9);
+				//console.log(powerDist/maxDist);
+				var powerPercent=Math.min(powerDist/maxDist,1);
+				currentPlayer.power=powerPercent;
+				//var shootVector = calcvector(mouseAngle,power);
+				//var shootVector=calcvector(player2world(currentPlayer,currentPlayer.angle),power);
+				//ctx.strokeStyle="#FF0000";
+				//ctx.beginPath();
+				//ctx.moveTo(mouseVector.xv+playerX,mouseVector.yv+playerY);
+				//ctx.lineTo(shootVector.xv+mouseVector.xv+playerX,shootVector.yv+mouseVector.yv+playerY);
+				//ctx.stroke();
+				
+				//var tempVector = calcvector(mouseAngle,power/10);
+				drawAimTrace(ctx);
+			}
+			//}
+
+
+			//ctx.clearRect(cx-100,0,cx+100,100);
+			//ctx.clearRect(cx-100,height-100,cx+100,100);
+			drawMainTitles(ctx)
+
+
+			//document.getElementById("log").value = "Frame Time: " + avgTime + "\n" + document.getElementById("log").value;
+			for (var x = 0; x < players.length; x++) {
+				
+				//updatePlayerTitles(players[x]);
+				if(players[x].updateTitles)
+					updatePlayerTitles(players[x]);
+				drawPlayerTitles(ctx,players[x]);
+				if (players[x].state != "loser") {
+					drawPlayer(ctx,players[x]);
+				}else{
+					//explode player
+					//ctx.globalAlpha = .5;
+					//drawCache(ctx, objectCache["player"], players[x].x, players[x].y,1);
+					if(!players[x].explosion){
+						createPlayerExplosion(players[x]);
+					}
+					drawPlayerExplosion(ctx,players[x]);
+						
+				}
+				
+				
+				ctx.globalAlpha = 1;
+				
+			}
+			
+			
+			for (var i = 0; i < missiles.length; i++) {
+				if (missiles[i].active != 0) {
+					if (!missiles[i].impact) {
+						//calculate missile position
+						//missileThink(missiles[i]);
+						//draw the missile
+						drawMissile(ctx,missiles[i])
+					} else {
+						// otherwise, draw explosion
+						drawMissileExplosion(ctx,missiles[i])
+					}
+					drawMissileTrail(ctx,missiles[i]);
+
+					ctx.globalAlpha = 1
+					//if (missiles[i].x > width || missiles[i].x < 0 || missiles[i].y > height || missiles[i].y < 0) 
+					//	drawPlaceHolder(ctx, Math.min(Math.max(missiles[i].x, 5), width - 5), Math.min(Math.max(missiles[i].y, 5), height - 5), missiles[i].color);
+					/*var impactResult=checkImpact(missiles[i].x,missiles[i].y);
+					if(impactResult){
+						if(impactResult.indexOf("player") != -1){
+								impactMissile(i, players[impactResult.split(" ")[1]]);
+						} else{
+								impactMissile(i);
+						}
+					}
+					var dist = calcdist(cx, cy, missiles[i].x, missiles[i].y);
+					if (dist > width * 1.5 || missiles[i].trail.length > maxShotTime) 
+						impactMissile(i);*/
+					
+					/*for (var x = 0; x < players.length; x++) {
+						var playerDist = calcdist(players[x].x, players[x].y, missiles[i].x, missiles[i].y);
+						var tmpPlayerSize = playerSize + 3
+						if (players[x].shield >= 25) 
+							tmpPlayerSize += 12
+						if (playerDist < tmpPlayerSize) 
+					}
+					for (var x = 0; x < moons.length; x++) {
+						var moonDist = calcdist(moons[x].x, moons[x].y, missiles[i].x, missiles[i].y);
+						if (moonDist < moons[x].size + 3) 
+							impactMissile(i);
+					}
+					var dist = calcdist(cx, cy, missiles[i].x, missiles[i].y);
+					if (dist < worldSize || dist > width * 1.5 || missiles[i].trail.length > maxShotTime) 
+						impactMissile(i);
+					*/
+				}
+			}
+			//drawStar(ctx,cx,cy,worldSize,"#000000","#FFFFFF",3);
+			drawCache2(ctx, objectCache["world"], cx, cy,1,"world"+worldSize);
+			/*for (var i = 0; i < craters.length; i++) {
+				 drawStar(ctx,craters[i].x,craters[i].y,craters[i].size,"rgba(0,0,0,0)","#c0c0c0",2);
+	 		}*/
+			for (var i = 0; i < moons.length; i++) {
+				//var dir = calcdir(cx, cy, moons[i].x, moons[i].y);
+				//var dist = calcdist(cx, cy, moons[i].x, moons[i].y);
+				//dir += moons[i].speed / 10;
+				//vector = calcvector(dir, dist);
+				//moons[i].x = vector.xv + cx;
+				//moons[i].y = vector.yv + cy;
+				drawCache2(ctx, moons[i].cache, moons[i].x, moons[i].y,1,"moon"+moons[i].size);
+			}
+			
+			if (centerMessage) {
+				ctx.textAlign = "center";
+				ctx.fillStyle = "#FFFFFF";
+				ctx.fillText(centerMessage, cx, cy);
+			} else {
+				//ctx.clearRect(cx-200, cy-50,400,100);
+			}
+			
+			thinkTime = (new Date()) - thinkStart;
+			if (thinkArray.length < thinkArrayMax) {
+				thinkArray.push(thinkTime);
+				totalThinkTime += thinkTime;
+			}
+			else {
+				totalThinkTime -= thinkArray[thinkArrayWriter];
+				thinkArray[thinkArrayWriter] = thinkTime;
+				totalThinkTime += thinkTime;
+				thinkArrayWriter++;
+				if (thinkArrayWriter >= thinkArrayMax) 
+					thinkArrayWriter = 0;
+			}
+		}
+		//},20);
+	}
+}catch(e){
+	alert("error");
+}
+</script>
+<div id="buttons">
+	<button id="reset" onClick="currentLevel++;resetGame(currentLevel)">Next Level</button>
+	<button id="pause" onClick="pauseGame()">Pause</button>
+</div>
+<div id="buttons2">
+	<button id="pause" onClick="noStars()">No Stars</button>
+	<button id="pause" onClick="noTrails()">No Trails</button>
+	<!---<button id="perfect" onClick="perfectShot()">Perfect Shot</button>--->
+	<textarea id="log" cols="30" rows="20"></textarea>
+</div>
+</body>
+</html>

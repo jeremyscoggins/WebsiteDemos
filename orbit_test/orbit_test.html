@@ -1,0 +1,135 @@
+<html>
+	<head>
+		<title>Demo</title>
+		<style>
+			#universe{
+				border:1px solid black;
+			}
+		</style>
+	</head>
+<body onload="init()">
+	
+<canvas height="600" width="600" id="universe"></canvas>
+
+<script type="text/javascript">
+	var colors = ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#00FFFF', '#FFFFFF'];
+	var starcount = 50;
+	/*
+	var sinTable = [];
+	for(x=0;x<3650;x++)
+		sinTable[x]=Math.sin(deg2rad(x/10));
+	var cosTable = [];
+	for(x=0;x<3650;x++)
+		cosTable[x]=Math.cos(deg2rad(x/10));
+	*/
+	
+	function deg2rad(deg){
+		return deg * Math.PI / 180;
+	}
+	function rad2deg(rad){
+		var out= rad * 180 / Math.PI;
+		if(out < 0)
+			out=out+365;
+		return out;
+	}
+	function force(dir,vel){
+		return{
+			xv:Math.cos(deg2rad(dir))*vel,
+			yv:Math.sin(deg2rad(dir))*vel
+		};
+		/*return{
+			xv:cosTable[Math.round(dir*10)]*vel,
+			yv:sinTable[Math.round(dir*10)]*vel
+		};*/
+	}	
+	function calcdir(x, y, x2, y2){
+		return rad2deg(Math.atan2(y2-y,x2-x));
+	}
+	function calcdist(x, y, x2, y2){
+		return Math.sqrt(Math.pow(y2-y,2)+Math.pow(x2-x,2));
+	}
+	function getColor() {
+	    return colors[Math.floor(Math.random() * colors.length)];
+	}
+	function drawStar(ctx,x,y,size,color){
+		ctx.fillStyle=color;
+		ctx.beginPath();
+		ctx.arc(x, y, size, 0, Math.PI*2, true); 
+		ctx.closePath();
+		ctx.fill();
+	}
+	function init(){
+		var downstart=null;
+		function newStar(x,y,velocity){
+			var direction=Math.floor(Math.random() * 365);
+			var velocity2=Math.random() * 300;
+			var vector2 = force(direction,velocity2);
+			var velocity=velocity||Math.random() * 1+.5;
+			if(!x)
+				var vector = force(direction+95,velocity);
+			else
+				var vector = force(calcdir(300,300,x,y)+95,velocity);
+			stars.push({
+				xv:vector.xv,
+				yv:vector.yv,
+				x:x||vector2.xv+300,
+				y:y||vector2.yv+300,
+				color:getColor(),
+				size:5+Math.floor(Math.random()*5),
+				active:1,
+				trail:[]				
+			});
+		}
+		/*document.onmousemove=function(e){
+			var mouseX = e.clientX-10;
+			var mouseY = e.clientY-10;
+		}*/
+		document.getElementById("universe").onmousedown=function(e){
+			downstart = new Date();
+		}
+		document.getElementById("universe").onmouseup=function(e){
+			newStar(e.clientX-10,e.clientY-10,((new Date())-downstart)/100);
+		}
+		var canvas = document.getElementById("universe");
+		var ctx = canvas.getContext("2d");
+		var stars = [];
+		for(var i=0;i<starcount;i++)
+			newStar();
+		var thinkInterval = setInterval(function(){
+			ctx.fillStyle="#000000";
+			ctx.fillRect(0,0,600,600);
+			for(var x=0;x<50;x++){
+					ctx.globalAlpha=1-x/50;
+					drawStar(ctx,300,300,x,"#0000FF");
+			}
+			
+			for (var i = 0; i < stars.length; i++) {
+				if (stars[i].active != 0) {
+					var dir = calcdir(300, 300, stars[i].x, stars[i].y);
+					var dist = calcdist(300, 300, stars[i].x, stars[i].y);
+					var frc = 250;
+					var vector = force(dir, (frc / Math.pow(dist,2)) * -1);
+					stars[i].xv += vector.xv;
+					stars[i].yv += vector.yv;
+					stars[i].x += stars[i].xv;
+					stars[i].y += stars[i].yv;
+					for(var t=0;t<stars[i].trail.length;t+=2){
+							ctx.globalAlpha=t/(stars[i].trail.length*5);
+							drawStar(ctx,stars[i].trail[t].x,stars[i].trail[t].y,stars[i].size*t/stars[i].trail.length,stars[i].color);
+					}
+					ctx.globalAlpha=1
+					drawStar(ctx,stars[i].x,stars[i].y,stars[i].size,stars[i].color);
+					stars[i].trail.push({x:stars[i].x,y:stars[i].y});
+					if(stars[i].trail.length > 30)
+						stars[i].trail.shift(); 
+					if (dist < 45 || dist > 600)
+						stars.splice(i,1);
+				}
+			}
+			if (stars.length == 0) 
+				clearInterval(thinkInterval);
+		},20);
+	}
+</script>
+</body>
+</html>

@@ -1,0 +1,143 @@
+<html>
+<head>
+<title>circle test</title>
+<style>
+.pixel {
+position:absolute;
+height:3px;
+width:3px;
+background-color:white;
+border:1px solid black;
+
+}
+</style>
+<script>
+halfPI = Math.PI/180;
+//deg2rad = new Array();
+sinTable = new Array();
+cosTable = new Array();
+for(x=0;x<3600;x++){
+	cosTable[x]=Math.cos((x/10)*halfPI);
+	sinTable[x]=Math.sin((x/10)*halfPI);
+}
+
+
+function CtoP(x,y){
+	this.d = Math.sqrt(x^2 + y^2);
+	this.a = Math.atan(y/x);
+}
+function PtoC(a,d){
+	//deg = a*(Math.PI/180);
+	//deg = deg2rad[a];
+	//this.x = d*Math.cos(deg);
+	//this.y = d*Math.sin(deg);
+	this.x = d*cosTable[a*10];
+	this.y = d*sinTable[a*10];
+}
+function drawPixel(x,y,canvasObj){
+	newDiv = document.createElement("div");
+	newDiv.className = "pixel";
+	newDiv.style.left=x;
+	newDiv.style.top=y;
+	canvasObj.appendChild(newDiv);	
+	return newDiv;
+}
+
+
+
+</script>
+</head>
+<body>
+<div style="height:100%;width:100%" id="canvas">
+</div>
+
+</body>
+<script>
+/*for(a = 0; a<360;a+=1)
+{
+	result = new PtoC(a,100);
+	drawPixel(result.x+300,result.y+300);
+	result = new PtoC(a,10);
+	drawPixel(result.x+300,result.y+300);
+	
+}*/
+	canvasDiv = document.getElementById("canvas");
+	divAngle = 0.1;
+	divDist = 10;
+	centerx = 300;
+	centery = 300;
+	//dcount = 0;
+	result = new PtoC(divAngle,divDist);
+	orbitDiv = new Array();
+	dLimit =100;
+	dMax = 100;
+	dspacing = 10;
+	rspacing = 10;
+	dSpeed=10;
+	//for(x=0;x<dLimit;x++){
+	//	orbitDiv[x] = drawPixel(result.x+centerx,result.y+centery,canvasDiv);
+	//}
+	dIndex=0;
+	rotDir = 1;
+	var drawInterval = false;;
+	function startAnimation(){
+		//alert(drawInterval);
+		clearInterval(drawInterval);
+		drawInterval = setInterval(function (){
+			if(dLimit < orbitDiv.length)
+				resetAnimation();
+			angleInc=(360/(divDist*2*Math.PI/rspacing))*rotDir;
+			divAngle+=angleInc
+				divDist+=(dspacing/(360/angleInc));
+			if((divDist>dMax && rotDir == 1) || (divDist<10 && rotDir == -1)){
+				rotDir*=-1;
+				//divAngle+=angleInc/2;
+			}
+		
+			if(divAngle>360)
+				divAngle-=360;
+			if(divAngle<0)
+				divAngle+=360;
+			result = new PtoC(Math.round(divAngle*10)/10,Math.round(divDist));
+			//drawPixel(result.x+centerx,result.y+centery,canvasDiv);
+			if(orbitDiv[dIndex]){
+				orbitDiv[dIndex].style.left=result.x+centerx;
+				orbitDiv[dIndex].style.top=result.y+centery;
+			} else {
+				orbitDiv[dIndex] = drawPixel(result.x+centerx,result.y+centery,canvasDiv);
+			}
+			//dcount++;
+			dIndex++;
+			if(dIndex>=dLimit)
+				dIndex=0;
+		},dSpeed);
+	}
+	function resetAnimation(){
+		divAngle = 0.1;
+		divDist = 10;
+		result = new PtoC(divAngle,divDist);
+		dIndex=0;
+		rotDir = 1;
+		for(x=0;x<orbitDiv.length;x++){
+			canvasDiv.removeChild(orbitDiv[x]);
+		}
+		orbitDiv = [];
+	}
+	startAnimation();
+	
+
+//alert(result.x + " " + result.y);
+
+
+</script>
+<div  style="position:absolute;top:0px;left:0px;">
+<button onClick="clearInterval(drawInterval);return false;">STOP</button>
+<button onClick="startAnimation();return false;">START</button>
+<button onClick="resetAnimation();return false;">RESET</button>
+<button onClick="rotDir*=-1;return false;">TURN</button><br>
+Count:<input value="100" onChange="dLimit=this.value;" size="5">
+Size:<input value="100" onChange="dMax=this.value;" size="5">
+Spacing:<input value="10" onChange="dspacing=this.value;rspacing=this.value;" size="5">
+Speed:<input value="10" onChange="dSpeed=this.value;startAnimation();" size="5">
+</div>
+</html>

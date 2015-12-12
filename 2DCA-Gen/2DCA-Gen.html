@@ -1,0 +1,581 @@
+<html>
+	<head>
+		<title>2D Cellular Automata (Generations)</title>
+		<style>
+			#mainCanvas{
+				height:400px;
+				width:600px;
+				border:1px solid black;
+			}
+			table{
+				font-size:12pt;
+			}
+			tr td.hidden{
+				display:none;
+			}
+			/*tr:hover td.hidden{
+				display:block;
+			}*/
+		</style>
+	</head>
+	<body>
+		<a href="./CAIndex.html">Back to Index</a><br>
+		<h1>2D Cellular Automata (Generations)</h1>
+		<canvas id="mainCanvas" width="600" height="400"></canvas><br>
+		<span id="start"><label>Start Type: </label>
+		<input type="radio" name="start" value="5000" checked><label for="start">:Very Dense </label>	
+		<input type="radio" name="start" value="1000"><label for="start">:Dense </label>		
+		<input type="radio" name="start" value="500"><label for="start">:Light </label>		
+		<input type="radio" name="start" value="10"><label for="start">:Sparse </label>		
+		<input type="radio" name="start" value="0"><label for="start">:Empty </label>		
+		</span><br>
+		<label for="rule">Rule (S/B/C): </label><input type="text" name="rule" id="rule">
+		<!--<button onClick="document.getElementById('rule').value=Math.round(Math.random()*255);setup();return false;">Random</button>-->
+		<button onClick="setup();return false;">Restart</button>
+		<button onClick="pause();return false;">Pause</button>
+		<h4>Rules to try:</h4>
+		<table BORDER="1" CELLSPACING="1" CELLPADDING="1">
+		  <tr>
+			<td>Name</td>
+			<td>Rule (S/B/C)</td>
+			<td>Character</td>
+			<td class="hidden">Description</td>
+		  </tr>
+		  <tr>
+			<td><a href="?rule=2367/3457/5" name="Banners">Banners</a></td>
+			<td>2367/3457/5</td>
+			<td>Exploding</td>
+			<td class="hidden">The rule often produces ships with growing fluttering banners.<br>
+			A rule by Mirek Wojtowicz.</td>
+		  </tr>
+		  <tr>
+			<td><a href="?rule=23/23/8" name="BelZhab">BelZhab</a></td>
+			<td>23/23/8</td>
+			<td>Exploding</td>
+			<td class="hidden">Another case of Zhabotinsky reaction.<br>
+			Author unknown.</td>
+		  </tr>
+		  <tr>
+			<td><a href="?rule=145678/23/8" name="BelZhabSediment">BelZhab Sediment</a></td>
+			<td>145678/23/8</td>
+			<td>Exploding</td>
+			<td class="hidden">The rule creates <a href="#BelZhab"> BelZhab</a> like patterns that have growing regions of
+			  &quot;sedimentary deposits&quot;.<br>
+			  A rule by Jason Rampe.</td>
+		  </tr>
+		  <tr>
+			<td><a href="?rule=234/34678/24" name="Bloomerang">Bloomerang</a></td>
+			<td>234/34678/24</td>
+			<td>Expanding</td>
+			<td class="hidden">A wave rule that rebounds into a kinder, gentler form of kaleidoscopics - rounded, soft, full, and slow.<br>
+			A rule by John Elliott, July 2000</td>
+		  </tr>
+		  <tr>
+			<td><a href="?rule=345/24/25" name="Bombers">Bombers</a></td>
+			<td>345/24/25</td>
+			<td>Chaotic</td>
+			<td class="hidden">A close variant of <a href="#Star Wars"> StarWars</a> rule with much more history steps, what
+			results in beautiful ships, puffers and oscillators.<br>
+			A rule by Mirek Wojtowicz.</td>
+		  </tr>
+		  <tr>
+			<td><a href="?rule=6/246/3" name="Brain6">Brain 6</a></td>
+			<td>6/246/3</td>
+			<td>Chaotic</td>
+			<td class="hidden">An interesting variation of immortal <a href="#Brian's Brain"> Brian's
+			  Brain</a>, with many patterns
+			constructed.<br>
+			A rule by Michael Sweney.</td>
+		  </tr>
+		  <tr>
+			<td><a href="?rule=/2/3" name="Brian's Brain">Brian's
+			Brain</a></td>
+			<td>/2/3</td>
+			<td>Chaotic</td>
+			<td class="hidden">Brian's Brain (BB, Brain), unquestionably one of the best known and most beautiful CA
+			rules. If we name the possible cell values based on a simplistic neural analogy, viz. 0 = "ready", 1 = "firing",
+			  2 = "refractory", then this simple rule can be stated thusly: Only a cell in the ready state may fire and it will only do so if exactly 2
+			  of its neighbors are firing.  After firing for one step, a cell spends a step in the refractory state before regaining readiness.<br>
+			  Although the rule is relatively old, it has never been systematically
+			  explored. The rule is so live that it's not easy to construct stable
+			  patterns in it. In December 1999 Michael Sweney discovered first BB
+			  oscillators.<br>
+			A rule by Brian Silverman.</td>
+		  </tr>
+		  <tr>
+			<td><a name="Burst" href="?rule=0235678/3468/9">Burst</a></td>
+			<td>0235678/3468/9</td>
+			<td>Chaotic</td>
+			<td class="hidden">A generations rule related to Nova, Prairie Fire and others which features large areas of cells that slowly die out or decay into oscillators. Named after a characteristic exploding oscillator. Similar to Day&amp;Night in that constructions can be built both with inside and outside oscillations and growth/decay. Has still lifes similar to
+			  Life.<br>
+			  A rule by Michael Sweney.</td>
+		  </tr>
+		  <tr>
+			<td><a name="BurstII" href="?rule=235678/3468/9">BurstII</a></td>
+			<td>235678/3468/9</td>
+			<td>Chaotic</td>
+			<td class="hidden">Basically it is Burst without the single cell still life. It supports slow and fast spaceships, oscillators, and methuselahs as well as a very characteristic p500+
+			  oscillator.<br>
+			  A rule by Michael Sweney.</td>
+		  </tr>
+		  <tr>
+			<td><a href="?rule=124567/378/4" name="Caterpillars">Caterpillars</a></td>
+			<td>124567/378/4</td>
+			<td>Chaotic</td>
+			<td class="hidden">The name comes from very commonly occurring caterpillars-like patterns.<br>
+			A rule by Mirek Wojtowicz.</td>
+		  </tr>
+		  <tr>
+			<td><a href="?rule=05678/24567/6" name="Chenille">Chenille</a></td>
+			<td>05678/24567/6</td>
+			<td>Exploding</td>
+			<td class="hidden">Author unknown.</td>
+		  </tr>
+		  <tr>
+			<td><a href="?rule=2345/1234/8" name="CircuitGenesis">Circuit Genesis</a></td>
+			<td>2345/1234/8</td>
+			<td>Expanding</td>
+			<td class="hidden">Circuitry which evolves far beyond its programming and continues to do so long after the initial intput have taken the borders
+			  elsewhere.<br>
+			  A rule by Charles A. Rockafellor.</td>
+		  </tr>
+		  <tr>
+			<td><a href="?rule=23/2/8" name="Cooties">Cooties</a></td>
+			<td>23/2/8</td>
+			<td>Exploding</td>
+			<td class="hidden">A very vivacious rule, with cells crawling around like mad lice.<br>
+			A rule by Rudy Rucker.</td>
+		  </tr>
+		  <tr>
+			<td><a href="?rule=012478/36/18" name="Ebb&amp;Flow">Ebb&amp;Flow</a></td>
+			<td>012478/36/18</td>
+			<td>Exploding</td>
+			<td class="hidden">A slow exploding rule with interesting internal dynamics within the growth
+			boundaries. Different types of symmetries will often determine whether a pattern grows
+			indefinitely or dies out. Presents challenging engineering problems. Best viewed with
+			MCell standard color palette at speeds of 10 or slower.<br>
+			A rule by Michael Sweney.</td>
+		  </tr>
+		  <tr>
+			<td><a href="?rule=012468/37/18" name="Ebb&amp;FlowII">Ebb&amp;Flow
+			II</a></td>
+			<td>012468/37/18</td>
+			<td>Exploding</td>
+			<td class="hidden">A close variant of Ebb&amp;Flow that supports simple gliders.<br>
+			A rule by Michael Sweney.</td>
+		  </tr>
+		  <tr>
+			<td><a href="?rule=2/2/25" name="Faders">Faders</a></td>
+			<td>2/2/25</td>
+			<td>Exploding</td>
+			<td class="hidden">A &quot;genetic&quot; cross between Life and Brian's Brain. A dead Faders
+			cell requires exactly 2 firing neighbors to get turned on. A firing Faders cell keeps
+			firing if it has exactly 2 firing neighbors. And when a Faders cell leaves the firing
+			state it goes into a sequence of refractory states.<br>
+			A rule by Rudy Rucker and John Walker</td>
+		  </tr>
+		  <tr>
+			<td><a href="?rule=2/13/21" name="Fireworks">Fireworks</a></td>
+			<td>2/13/21</td>
+			<td>Exploding</td>
+			<td class="hidden">Nearly perfect fireworks simulation. It produces interesting results from
+			both random and prepared initial states. Even several cells scattered over the lattice
+			will produce long-running ravishing pictures.<br>
+			A rule by John Elliott</td>
+		  </tr>
+		  <tr>
+			<td><a href="?rule=347/23/8" name="FlamingStarbows">Flaming Starbows</a></td>
+			<td>347/23/8</td>
+			<td>Exploding</td>
+			<td class="hidden">In this world beautiful expanding diamonds and oddly off-parallelograms sweep across the screen leaving trails of fire and spirals of autogenesis. Reminiscent of a mutant spawn of Faders and mad Zhabotinsky
+			  spirals.<br>
+			  A rule by Charles A. Rockafellor.</td>
+		  </tr>
+		  <tr>
+			<td><a href="?rule=12/34/3" name="Frogs">Frogs</a></td>
+			<td>12/34/3</td>
+			<td>Chaotic</td>
+			<td class="hidden">The name comes from very commonly occurring frog-like gliders.<br>
+			A rule by Scott Robert Ladd.</td>
+		  </tr>
+		  <tr>
+			<td><a href="?rule=356/23/6" name="Frozenspirals">Frozen
+			spirals</a></td>
+			<td>356/23/6</td>
+			<td>Cyclic</td>
+			<td class="hidden">The rule features a popular Zhabotinsky reaction, but with one distinction
+			- spirals have icicles in their vertices.<br>
+			A rule by Mirek Wojtowicz.</td>
+		  </tr>
+		  <tr>
+			<td><a name="Glisserati" href="?rule=035678/245678/7"> Glisserati</a></td>
+			<td>035678/245678/7</td>
+			<td>Exploding</td>
+			<td class="hidden">&quot;From simple seeds this rule is often highly
+			  glideriferous, generating striking kaleidoscopic patterns.  Sometimes, though, as
+			  in the Glidathon orbit, it is more sparse, in the vein of rules such as
+			  Transers, but with much longer transients, providing an uncanny sense of "perpetual motion".<br>
+		   Since I found this rule I've become aware of other recently discovered kaleidoscopic glider rules, such as Snake and
+			  TransersII, which share many of the same objects, though I've yet to see a
+			  Glidathon style orbit in them (which doesn't mean they aren't there - no one's really looked, AFAIK).<br>
+		   In the present version of Glisserati, orbits seeded randomly, as opposed to simply, collapse almost immediately, but that's not the
+			  case with the C=5 variation, which is very delicately poised between expansion and contraction.  So I've spun that one off as
+			  'Glissergy'.&quot; - J.E.<br>
+			A rule by John Elliott, May 2000.</td>
+		  </tr>
+		  <tr>
+			<td><a href="?rule=035678/245678/5" name="Glissergy">Glissergy</a></td>
+			<td>035678/245678/5</td>
+			<td>Exploding</td>
+			<td class="hidden">&quot;This rule differs from Glisserati only in its cellsize (5 rather
+			  than 7).  As would be expected, this change is an activity booster - so much so, that, unlike Glisserati, this rule has long
+			  transients from random as well as simple starts.  Think of it as the pin-iferous answer to Brian's Brain.&quot;
+			  - J.E.<br>
+			  A rule by John Elliott, May 2000</td>
+		  </tr>
+		  <tr>
+			<td><a href="?rule=12345/45678/8" name="Lava">Lava</a></td>
+			<td>12345/45678/8</td>
+			<td>Expanding</td>
+			<td class="hidden">All patterns are getting very slowly filled with hot lava.<br>
+			A rule by Mirek Wojtowicz.</td>
+		  </tr>
+		  <tr>
+			<td><a name="Lines" href="?rule=012345/458/3">Lines</a></td>
+			<td>012345/458/3</td>
+			<td>Stable</td>
+			<td class="hidden">The rule quickly self-organizes into linear structures, with separate
+			  orthogonally hatched areas. To see most interesting behaviour seed the universe with a circle with r >= 40 and a density of 20%.<br>
+			A rule by Anders Starmark, September 2000</td>
+		  </tr>
+		  <tr>
+			<td><a href="?rule=345/3/6" name="LivingOnTheEdge">LivingOn TheEdge</a></td>
+			<td>345/3/6</td>
+			<td>Chaotic</td>
+			<td class="hidden">LOTE. In this very chaotic rule it's hard to tell if patterns will survive or die out.<br>
+			A rule by Mirek Wojtowicz, February 2000</td>
+		  </tr>
+		  <tr>
+			<td><a href="?rule=01245678/3/8" name="MeteorGuns">Meteor Guns</a></td>
+			<td>01245678/3/8</td>
+			<td>Expanding</td>
+			<td class="hidden">Almost any design above a certain level of complexity results in a slowly exploding ball of fire which then spits fairly large numbers of generational gliders "meteors".There are easily discovered stable oscillators and static patterns. A truly satisfying environment (if only finding a limited growth meteor gun were as
+			  easy...).<br>
+			  A rule by Charles A. Rockafellor.</td>
+		  </tr>
+		  <tr>
+			<td><a href="?rule=45678/2478/25" name="Nova">Nova</a></td>
+			<td>45678/2478/25</td>
+			<td>Expanding</td>
+			<td class="hidden">Very lovely rule characterized by vibrant yet stately streaming growth from solid seeds.  The growth patterns and active
+			  border have a fascinating geometry, the particulars of which are sensitive to the size and shape of the initial solid.<br>
+			A rule by Mirek Wojtowicz.</td>
+		  </tr>
+		  <tr>
+			<td><a href="?rule=3/2/4" name="OrthoGo">OrthoGo</a></td>
+			<td>3/2/4</td>
+			<td>Exploding</td>
+			<td class="hidden">This simple rule supports spontaneous orthogonally productive "glider colliders".  But otherwise it seems fairly
+			  quiescent.<br>
+			  John Elliott, December 1999</td>
+		  </tr>
+		  <tr>
+			<td><a href="?rule=345/34/6" name="Prairie on fire">Prairie
+			on fire</a></td>
+			<td>345/34/6</td>
+			<td>Exploding</td>
+			<td class="hidden">This rule covers the lattice with fire. For best results use yellow-red
+			cells color settings.<br>
+			A rule by Mirek Wojtowicz.</td>
+		  </tr>
+		  <tr>
+			<td><a href="?rule=2/23/8" name="RainZha">RainZha</a></td>
+			<td>2/23/8</td>
+			<td>Exploding</td>
+			<td class="hidden">The simplest &quot;Zhabotinsky&quot; style cellular automaton. It
+			spontaneously generates spirals from an initial random pattern.<br>
+			A rule by Rudy Rucker and John Walker</td>
+		  </tr>
+		  <tr>
+			<td><a name="Rake" href="?rule=3467/2678/6">Rake</a></td>
+			<td>3467/2678/6</td>
+			<td>Exploding</td>
+			<td class="hidden">This rule is a simple variation of the <a href="#Worms"> Worms</a> rule and is characterized by the numerous rake puffers that it generates. Together with the puffers, it generates many ships and expanding wings. These elements can easily be arranged to collide and form ships and puffers of arbitrary
+			  complexity.<br>
+			  A rule by Brian Prentice.</td>
+		  </tr>
+		  <tr>
+			<td><a href="?rule=45678/25678/4" name="Sedimental">SediMental</a></td>
+			<td>45678/25678/4</td>
+			<td>Exploding</td>
+			<td class="hidden">From a random seed state of 30% ones, the rule tends to form stable
+			&quot;islands&quot;, with active coastlines and fascinating inter-island
+			&quot;commerce&quot;. But an orbit's fate is quite sensitive to the starting percentage.
+			Below 25% or so the world remains sparsely Brain-like, whereas somewhere above 30% the
+			islands begin to accrete into larger &quot;landmasses&quot;, so that by 40% you nearly
+			always end up with a single huge &quot;continent&quot;. As for simple seeds, they often
+			lead to surprising results. And the rule clearly has great potential from the
+			&quot;engineering&quot; standpoint.<br>
+			A rule by John Elliott.</td>
+		  </tr>
+		  <tr>
+			<td><a href="?rule=03467/25/6" name="Snake">Snake</a></td>
+			<td>03467/25/6</td>
+			<td>Exploding</td>
+			<td class="hidden">This rule is a simple variation of the <a href="#Worms"> Worms</a>
+			  rule. It contains two interesting oscillators, a 3*3 square and a shuttle, among its basic elements. By combining copies of the square, many beautiful oscillators can be generated. The rule also generates many puffers one of which generates a sequence of shuttles. The tail generated by the shuttle puffer resembles a
+			  snake.<br>
+			  A rule by Brian Prentice.</td>
+		  </tr>
+		  <tr>
+			<td><a href="?rule=13458/38/6" name="SoftFreeze">SoftFreeze</a></td>
+			<td>13458/38/6</td>
+			<td>Chaotic</td>
+			<td class="hidden">&quot;The rule is delicately poised between "solid" and "liquid" phases.  From
+			  many simple seeds it forms "living crystals" - the crystals form, melt, and reform seemingly indefinitely, in balance with an active
+			  phase.  The areas of melting can shrink to a point where you're sure everything will freeze over, and then they stage a comeback.<br>
+		   From random starts, this rule resembles a nice poised rule from Wojtowicz called "Living on the Edge", only this one is even more
+			  "on the edge".  (BTW, though the rule definition looks as though I took LOTE as a starting point, I actually came at it from a different
+			  direction entirely, and only afterwards realized I had converged on the B3S345 core.)&quot;
+			  - J.E.<br>
+			  A rule by John Elliott.</td>
+		  </tr>
+		  <tr>
+			<td><a href="?rule=2/234/5" name="Spirals">Spirals</a></td>
+			<td>2/234/5</td>
+			<td>Exploding</td>
+			<td class="hidden">The rule produces beautiful stable spirals that unroll forever.<br>
+			Author unknown.</td>
+		  </tr>
+		  <tr>
+			<td><a href="?rule=345/2/4" name="Star Wars">Star Wars</a></td>
+			<td>345/2/4</td>
+			<td>Exploding</td>
+			<td class="hidden">A very interesting and beautiful rule producing deep space battle scenes;
+			a paradise for patterns' creators in the tradition of Conway's Life. It's a successful combination of famous Brian's Brain
+			with a stabilizing factor.<br>
+			  &quot;StarWars is also an interesting rule from the low-investment standpoint.  In particular,
+			  it is notable for the abundance, intricacy, and variety of its naturally-occurring glider guns.  In general when running
+			  "au naturel&quot; StarWars is active to a degree almost reminiscent of Brain, with the distinction that it likes to build fixed
+			  lego-like skeletal structures.  In some orbits this latter penchant reaches its
+			  zenith, and we get large universe-spanning "shells" possessing an intricate radiate geometry.&quot;
+			  - J.E.<br>
+			  The rule is also known as &quot;MirekGro&quot;.<br>
+			A rule by Mirek Wojtowicz, March 1999.</td>
+		  </tr>
+		  <tr>
+			<td><a href="?rule=3456/2/6" name="Sticks">Sticks</a></td>
+			<td>3456/2/6</td>
+			<td>Exploding</td>
+			<td class="hidden">This interesting rule builds a variety of sticks, with ships floating
+			among them.<br>
+			A rule by Rudy Rucker.</td>
+		  </tr>
+		  <tr>
+			<td><a href="?rule=23/34/8" name="Swirl">Swirl</a></td>
+			<td>23/34/8</td>
+			<td>Chaotic</td>
+			<td class="hidden">While spirals are common in CAs (see for example <a href="#RainZha">RainZha</a>
+			  or <a href="rullex_cycl.html">Cyclic CAs</a>), Swirl's whirlers are of the rarer discrete variety -
+			  isolated "whirlpools" in an otherwise dead sea.  There are two sizes of whirlpools that occur regularly.  Ladd calls the smaller the
+			  &quot;swirlpool&quot; and the larger the "flamewhirl".  Also there is a glider
+			  with a flickering double tail which Ladd aptly refers to as a fire or flame glider.<br>
+			A rule by Scott Robert Ladd.</td>
+		  </tr>
+		  <tr>
+			<td><a href="?rule=1234/34/48" name="ThrillGrill">ThrillGrill</a></td>
+			<td>1234/34/48</td>
+			<td>Expanding</td>
+			<td class="hidden">Sparkling dynamics inhabit and rearrange a grill-like background of one-cells.<br>
+			  A rule by John Elliott, July 2000.</td>
+		  </tr>
+		  <tr>
+			<td><a href="?rule=345/26/5" name="Transers">Transers</a></td>
+			<td>345/26/5</td>
+			<td>Exploding</td>
+			<td class="hidden">A beautiful and dynamic rule with many distinctive entities that occur
+			&quot;in the wild&quot;, with remarkable inter-entity transformations.<br>
+			A rule by John Elliott.</td>
+		  </tr>
+		  <tr>
+			<td><a href="?rule=0345/26/6" name="TransersII">TransersII</a></td>
+			<td>0345/26/6</td>
+			<td>Exploding</td>
+			<td class="hidden">A rule by Michael Sweney.</td>
+		  </tr>
+		  <tr>
+			<td><a href="?rule=345/34678/5" name="Wanderers">Wanderers</a></td>
+			<td>345/34678/5</td>
+			<td>Exploding</td>
+			<td class="hidden">A rule very similar to &quot;Prairie on fire&quot;, but creates
+			interesting dynamically moving patterns. <br>
+			A rule by Mirek Wojtowicz.</td>
+		  </tr>
+		  <tr>
+			<td><a href="?rule=3467/25/6" name="Worms">Worms</a></td>
+			<td>3467/25/6</td>
+			<td>Exploding</td>
+			<td class="hidden">A very vigorous rule producing crowds of disgusting worms.<br>
+			A rule by Mirek Wojtowicz.</td>
+		  </tr>
+		  <tr>
+			<td><a name="Xtasy" href="?rule=1456/2356/16">Xtasy</a></td>
+			<td>1456/2356/16</td>
+			<td>Exploding</td>
+			<td class="hidden">From simple seeds in a closed universe this is a lovely kaleidoscopic wave rule that tends to do extended meditations
+			  on the letter X.<br>
+			  A rule by John Elliott, July 2000</td>
+		  </tr>
+		</table>
+
+		<span>Rules Credit: </span><a href="http://www.mirekw.com/ca/rullex_gene.html">http://www.mirekw.com/ca/rullex_gene.html</a>
+
+
+		<script type="text/javascript">
+			function clickPixel(x, y) {
+				//console.log(Math.floor(x/cellSize)*cellSize,Math.floor(y/cellSize)*cellSize,0,0,0,255);
+				var canvasData = context.getImageData(0,0,canvas.width, canvas.height);
+				if(checkNeighbor(canvasData, x, y)!=1)
+					setPixel(canvasData,Math.floor(x/cellSize)*cellSize,Math.floor(y/cellSize)*cellSize,0,0,0,255);
+				else
+					setPixel(canvasData,Math.floor(x/cellSize)*cellSize,Math.floor(y/cellSize)*cellSize,255,255,255,255);
+				context.putImageData(canvasData, 0, 0);
+			}
+			function setPixel(imageData, x, y, r, g, b, a) {
+				for(var y2 = y; y2< y+cellSize; y2++){
+					for(var x2 = x; x2< x+cellSize; x2++){
+						var lr=r,lg=g,lb=b,la=a;
+						var index = (x2 + y2 * imageData.width) * 4;
+						
+						imageData.data[index+0] = lr;
+						imageData.data[index+1] = lg;
+						imageData.data[index+2] = lb;
+						imageData.data[index+3] = a;
+					}
+				}
+			}
+			function checkNeighbor(imageData, x, y) {
+				if(x > imageData.width)
+					x=0;
+				if(y > imageData.height)
+					y=0;
+				if(x < 0)
+					x=imageData.width-cellSize;
+				if(y < 0)
+					y=imageData.height-cellSize;
+				var idx = ((x) + (y) * imageData.width) * 4;
+				if(imageData.data[idx+1] == C_ON)
+					return 1;
+				else if(imageData.data[idx+1] != C_OFF)
+					return 2;
+				return false;
+			}
+			function pause(){
+				pauseState = !pauseState
+			}
+	
+			var rule,rules,canvasData,myState,newState,generations,pauseState=false,mouseDown=false,colorStep;
+			var cellSize=5;
+			var canvas = document.getElementById("mainCanvas");
+			var context = canvas.getContext('2d');
+			var ruleEl = document.getElementById("rule");
+			var startEl = document.getElementById("start");
+			var C_ON = 0;
+			var C_OFF= 255;
+			var maxColor=C_OFF;
+			canvas.onclick=function(event){
+				//console.log(event);
+				clickPixel(event.offsetX, event.offsetY)
+			}
+			canvas.onmousedown=function(){mouseDown=true};
+			canvas.onmouseup=function(){mouseDown=false};
+			canvas.onmousemove=function(event){
+				if(mouseDown==true)
+					canvas.onclick(event);
+			};
+			var locationRule = window.location.href.split("=")[1];
+			var frameRate = 10;
+			var frameTime = 1000/frameRate;
+			function setup(){
+				canvasData = context.createImageData(canvas.width, canvas.height);
+				for(var i =0;i<startEl.children.length;i++){
+					if(startEl.children[i].checked)
+						startEl.checkedValue = startEl.children[i].value;
+				}
+				rule = ruleEl.value||locationRule||"2367/3457/5";
+				ruleEl.value = rule;
+				//rules = (parseInt(rule)).toString(2).split('');
+				rules = rule.split("/");
+				for(var i=0;i< Math.min(rules.length,2);i++)
+					rules[i]=rules[i].split('');
+				generations = rules[2]||2;
+				colorStep = Math.round((C_OFF-C_ON)/(generations-1));
+				//console.log(rule,rules,generations,colorStep);
+				for(var x=0;x<canvas.width;x+=cellSize){
+					for(var y=0;y<canvas.height;y+=cellSize){
+						setPixel(canvasData,x,y,C_OFF,C_OFF,C_OFF,255);
+					}
+				}
+				for(var i=0;i<startEl.checkedValue;i++){
+					var x = Math.round(Math.random()*(canvasData.width/cellSize))*cellSize;
+					var y = Math.round(Math.random()*(canvasData.height/cellSize))*cellSize;
+					//console.log(x,y);
+				setPixel(canvasData,x,y,C_ON,C_ON,C_ON,255);
+					
+				}
+				context.putImageData(canvasData, 0, 0);
+			}
+			setup();
+			function draw(){
+				if(!pauseState){
+					var startTime = new Date();
+					var oldCanvasData = context.getImageData(0,0,canvas.width, canvas.height);
+					var canvasData = context.createImageData(canvas.width, canvas.height);
+					var pixelCount=0;
+					for (var y = 0; y < canvasData.height; y+=cellSize) {
+						for (var x = 0; x < canvasData.width; x+=cellSize) {
+							// Index of the pixel in the array
+							newState = C_OFF;
+							var neighbors = 0;
+							for(var y2 = -cellSize;y2<=cellSize;y2+=cellSize){
+								for(var x2 = -cellSize;x2<=cellSize;x2+=cellSize){
+									if(x2 != 0 || y2 != 0){
+										if(checkNeighbor(oldCanvasData,x+x2,y+y2)==1)
+											neighbors++;
+									}
+								}
+							}
+
+							myState=oldCanvasData.data[((x + y * canvas.width) * 4)+1];
+							
+							if(checkNeighbor(oldCanvasData,x,y)==1){
+							//black
+								for(var i = 0; i< rules[0].length;i++){
+									if(neighbors == rules[0][i])
+										newState = C_ON;
+								}
+								if(newState == C_OFF)
+									newState=Math.min(Math.max(myState+colorStep,Math.min(C_OFF,C_ON)),Math.max(C_OFF,C_ON));
+							} else {
+							//white
+								for(var i = 0; i< rules[1].length;i++){
+									if(neighbors == rules[1][i] && !checkNeighbor(oldCanvasData,x,y))
+										newState = C_ON;
+								}
+								if(newState == C_OFF)
+									newState=Math.min(Math.max(myState+colorStep,Math.min(C_OFF,C_ON)),Math.max(C_OFF,C_ON));
+							}
+								
+							 setPixel(canvasData,x,y,newState,newState,newState,255);
+						}
+					}
+					context.putImageData(canvasData, 0, 0);
+					var execTime = (new Date())-startTime;
+				}
+				setTimeout(draw,Math.max(0,frameTime-execTime));
+			}
+			setTimeout(draw,frameTime);
+		</script>
+	</body>
+	
+</html>

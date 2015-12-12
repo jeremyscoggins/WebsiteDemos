@@ -1,0 +1,49 @@
+
+<html>
+	<head>
+		<title></title>
+		<script type="text/javascript" src="perlin.js"></script>
+	</head>
+	<body>
+		<canvas id="canv" height="100" width="100" style="height:500px;width:500px;"></canvas>
+		<script type="text/javascript">
+			function setPixel(imageData, x, y, r, g, b, a)
+			{
+				var index = (x + y * imageData.width) * 4;
+				imageData.data[index+0] = r;
+				imageData.data[index+1] = g;
+				imageData.data[index+2] = b;
+				imageData.data[index+3] = a;
+			}
+			//console.log(ImprovedNoise.Generate(.55));
+			var context = document.getElementById("canv").getContext("2d");
+			var height=100;
+			var width=100;
+			var colorStart = 64;
+			var colorStop = 256;
+			var colorRange = colorStop - colorStart;
+			var halfRange = colorRange/2
+			var scale = 3;
+			var timeScale = 50;
+			var sx = width/scale;
+			var sy = height/scale;
+			var t =0;
+			(function drawNoise(){
+				var startTime = new Date().getTime();
+				var imageData = context.createImageData(width,height);
+				for(var x=0;x < width; x++)
+				{
+					for(var y=0;y< height; y++)
+					{
+						var color = (ImprovedNoise.Generate3D(x/sx,y/sy,t/timeScale)*halfRange)+halfRange + colorStart;
+						//console.log(x,y,color);
+						setPixel(imageData, x, y, 0, color, 0, 255);
+					}
+				}
+				context.putImageData(imageData, 0, 0);
+				t++;
+				setTimeout(drawNoise,Math.max(0,(1000/30)-((new Date).getTime()-startTime)));
+			})();
+		</script>
+	</body>
+</html>

@@ -1,0 +1,683 @@
+@charset "utf-8";
+/* CSS Document */
+
+#hubGrid{
+		width: 1620px; 
+		height: 630px;
+		margin: 0 auto;
+		border: 1px solid blue;
+		position: relative;
+	}
+	
+	#btnObj1,
+	#btnObj2,
+	#btnObj3,
+	#btnObj4,
+	#btnObj5,
+	#btnObj6,
+	#btnObj7,
+	#btnObj8{
+		background: #ccc;
+		border:1px solid red;
+		width: 260px;
+		height: 200px;
+	}
+	
+	.active{
+		width: 800px;
+		height: 620px;
+	}
+
+.b1{
+	position:absolute;
+	top:210px;
+	left:100px; 
+}
+
+/*- Active Button States Default
+--------------------------------------------*/
+	#hubGrid #btnObj1.initial{
+		position: absolute;
+		left:0;
+		top:0;
+	}
+	
+	#hubGrid #btnObj2.initial{
+		position: absolute;
+		left:270px;
+		top:0;
+	}
+	
+	#hubGrid #btnObj3.initial{
+		position: absolute;
+		left:540px;
+		top:0;
+	}
+	
+	#hubGrid #btnObj4.initial{
+		position: absolute;
+		left:270px;
+		top:210px;
+	}
+	
+	#hubGrid #btnObj5.initial{
+		position: absolute;
+		left:540px;
+		top:210px;
+	}
+	
+	#hubGrid #btnObj6.initial{
+		position: absolute;
+		left:810px;
+		top:210px;
+	}
+	
+	#hubGrid #btnObj7.initial{
+		position: absolute;
+		left:540px;
+		top:420px;;
+	}
+	
+	#hubGrid #btnObj8.initial{
+		position: absolute;
+		left:810px;
+		top:420px;
+	}
+
+/*- Active Button States BUTTON 1
+--------------------------------------------*/
+	#hubGrid #btnObj1.btnObj1Active{
+		width: 800px;
+		height: 620px;
+		position: absolute;
+		left:0;
+		top:0;
+	}
+	
+	#hubGrid #btnObj2.btnObj1Active{
+		position: absolute;
+		left:810px;
+		top:0;
+	}
+	
+	#hubGrid #btnObj3.btnObj1Active{
+		position: absolute;
+		left:1080px;
+		top:0;
+	}
+	
+	#hubGrid #btnObj4.btnObj1Active{
+		position: absolute;
+		left:810px;
+		top:210px;
+	}
+	
+	#hubGrid #btnObj5.btnObj1Active{
+		position: absolute;
+		left:1080px;
+		top:210px;
+	}
+	
+	#hubGrid #btnObj6.btnObj1Active{
+		position: absolute;
+		left:810px;
+		top:420px;
+	}
+	
+	#hubGrid #btnObj7.btnObj1Active{
+		position: absolute;
+		left:1080px;
+		top:420px;
+	}
+	
+	#hubGrid #btnObj8.btnObj1Active{
+		position: absolute;
+		left:1350px;
+		top:420px;
+	}
+	
+	/*- Active Button States BUTTON 2
+--------------------------------------------*/
+	#hubGrid #btnObj1.btnObj2Active{
+		position: absolute;
+		left:0;
+		top:0;
+	}
+	
+	#hubGrid #btnObj2.btnObj2Active{
+		width: 800px;
+		height: 620px;
+		position: absolute;
+		left:270px;
+		top:0;
+	}
+	
+	#hubGrid #btnObj3.btnObj2Active{
+		position: absolute;
+		left:1080px;
+		top:0;
+	}
+	
+	#hubGrid #btnObj4.btnObj2Active{
+		position: absolute;
+		top:210px;
+		left:0px;
+	}
+	
+	#hubGrid #btnObj5.btnObj2Active{
+		position: absolute;
+		left:1080px;
+		top:210px;
+	}
+	
+	#hubGrid #btnObj6.btnObj2Active{
+		position: absolute;
+		left:1350px;
+		top:210px;
+	}
+	
+	#hubGrid #btnObj7.btnObj2Active{
+		position: absolute;
+		left:1080px;
+		top:420px;
+	}
+	
+	#hubGrid #btnObj8.btnObj2Active{
+		position: absolute;
+		left:1350px;
+		top:420px;
+	}
+
+	/*- Active Button States BUTTON 3
+--------------------------------------------*/
+	#hubGrid #btnObj1.btnObj3Active{
+		position: absolute;
+		left:0;
+		top:0;
+	}
+	
+	#hubGrid #btnObj2.btnObj3Active{
+		position: absolute;
+		left:270px;
+		top:0;
+	}
+	
+	#hubGrid #btnObj3.btnObj3Active{
+		width: 800px;
+		height: 620px;
+		position: absolute;
+		left:540px;
+		top:0;
+	}
+	
+	#hubGrid #btnObj4.btnObj3Active{
+		position: absolute;
+		top:210px;
+		left:0px;
+	}
+	
+	#hubGrid #btnObj5.btnObj3Active{
+		position: absolute;
+		left:270px;
+		top:210px;
+	}
+	
+	#hubGrid #btnObj6.btnObj3Active{
+		position: absolute;
+		left:1350px;
+		top:210px;
+	}
+	
+	#hubGrid #btnObj7.btnObj3Active{
+		position: absolute;
+		left:270px;
+		top:420px;
+	}
+	
+	#hubGrid #btnObj8.btnObj3Active{
+		position: absolute;
+		left:1350px;
+		top:420px;
+	}
+	
+	/*- Active Button States BUTTON 4
+--------------------------------------------*/
+	#hubGrid #btnObj1.btnObj4Active{
+		position: absolute;
+		left:0;
+		top:0;
+	}
+	
+	#hubGrid #btnObj2.btnObj4Active{
+		position: absolute;
+		left:0px;
+		top:210px;
+	}
+	
+	#hubGrid #btnObj3.btnObj4Active{
+		position: absolute;
+		left:1080px;
+		top:0;
+	}
+	
+	#hubGrid #btnObj4.btnObj4Active{
+		width: 800px;
+		height: 620px;
+		position: absolute;
+		top:0px;
+		left:270px;
+	}
+	
+	#hubGrid #btnObj5.btnObj4Active{
+		position: absolute;
+		left:1080px;
+		top:210px;
+	}
+	
+	#hubGrid #btnObj6.btnObj4Active{
+		position: absolute;
+		left:1350px;
+		top:210px;
+	}
+	
+	#hubGrid #btnObj7.btnObj4Active{
+		position: absolute;
+		left:1080px;
+		top:420px;
+	}
+	
+	#hubGrid #btnObj8.btnObj4Active{
+		position: absolute;
+		left:1350px;
+		top:420px;
+	}
+
+	/*- Active Button States BUTTON 5
+--------------------------------------------*/
+	#hubGrid #btnObj1.btnObj5Active{
+		position: absolute;
+		left:0;
+		top:0;
+	}
+	
+	#hubGrid #btnObj2.btnObj5Active{
+		position: absolute;
+		left:270px;
+		top:210px;
+	}
+	
+	#hubGrid #btnObj3.btnObj5Active{
+		position: absolute;
+		left:270px;
+		top:0px;
+	}
+	
+	#hubGrid #btnObj4.btnObj5Active{
+		position: absolute;
+		top:420px;
+		left:270px;
+	}
+	
+	#hubGrid #btnObj5.btnObj5Active{
+		width: 800px;
+		height: 620px;
+		position: absolute;
+		left:540px;
+		top:0px;
+	}
+	
+	#hubGrid #btnObj6.btnObj5Active{
+		position: absolute;
+		left:1350px;
+		top:0px;
+	}
+	
+	#hubGrid #btnObj7.btnObj5Active{
+		position: absolute;
+		left:1350px;
+		top:210px;
+	}
+	
+	#hubGrid #btnObj8.btnObj5Active{
+		position: absolute;
+		left:1350px;
+		top:420px;
+	}
+	
+	/*- Active Button States BUTTON 6
+--------------------------------------------*/
+	#hubGrid #btnObj1.btnObj6Active{
+		position: absolute;
+		left:0;
+		top:0;
+	}
+	
+	#hubGrid #btnObj2.btnObj6Active{
+		position: absolute;
+		left:270px;
+		top:0;
+	}
+	
+	#hubGrid #btnObj3.btnObj6Active{
+		position: absolute;
+		left:540px;
+		top:0;
+	}
+	
+	#hubGrid #btnObj4.btnObj6Active{
+		position: absolute;
+		left:270px;
+		top:210px;
+	}
+	
+	#hubGrid #btnObj5.btnObj6Active{
+		position: absolute;
+		left:540px;
+		top:210px;
+	}
+	
+	#hubGrid #btnObj6.btnObj6Active{
+		width: 800px;
+		height: 620px;
+		position: absolute;
+		left:810px;
+		top:0px;
+	}
+	
+	#hubGrid #btnObj7.btnObj6Active{
+		position: absolute;
+		left:270px;
+		top:420px;;
+	}
+	
+	#hubGrid #btnObj8.btnObj6Active{
+		position: absolute;
+		left:540px;
+		top:420px;
+	}
+	
+	/*- Active Button States BUTTON 7
+--------------------------------------------*/
+	#hubGrid #btnObj1.btnObj7Active{
+		position: absolute;
+		left:0;
+		top:0;
+	}
+	
+	#hubGrid #btnObj2.btnObj7Active{
+		position: absolute;
+		left:270px;
+		top:210px;
+	}
+	
+	#hubGrid #btnObj3.btnObj7Active{
+		position: absolute;
+		left:270px;
+		top:0px;
+	}
+	
+	#hubGrid #btnObj4.btnObj7Active{
+		position: absolute;
+		top:420px;
+		left:270px;
+	}
+	
+	#hubGrid #btnObj5.btnObj7Active{
+		position: absolute;
+		left:1350px;
+		top:0px;
+	}
+	
+	#hubGrid #btnObj6.btnObj7Active{
+		position: absolute;
+		left:1350px;
+		top:210px;
+	}
+	
+	#hubGrid #btnObj7.btnObj7Active{
+		width: 800px;
+		height: 620px;
+		position: absolute;
+		left:540px;
+		top:0px;
+	}
+	
+	#hubGrid #btnObj8.btnObj7Active{
+		position: absolute;
+		left:1350px;
+		top:420px;
+	}
+	
+	/*- Active Button States BUTTON 8
+--------------------------------------------*/
+	#hubGrid #btnObj1.btnObj8Active{
+		position: absolute;
+		left:0;
+		top:0;
+	}
+	
+	#hubGrid #btnObj2.btnObj8Active{
+		position: absolute;
+		left:270px;
+		top:0px;
+	}
+	
+	#hubGrid #btnObj3.btnObj8Active{
+		position: absolute;
+		left:540px;
+		top:0px;
+	}
+	
+	#hubGrid #btnObj4.btnObj8Active{
+		position: absolute;
+		top:420px;
+		left:270px;
+	}
+	
+	#hubGrid #btnObj5.btnObj8Active{
+		position: absolute;
+		left:270px;
+		top:210px;
+	}
+	
+	#hubGrid #btnObj6.btnObj8Active{
+		position: absolute;
+		left:540px;
+		top:210px;
+	}
+	
+	#hubGrid #btnObj7.btnObj8Active{
+		position: absolute;
+		left:540px;
+		top:420px;
+	}
+	
+	#hubGrid #btnObj8.btnObj8Active{
+		width: 800px;
+		height: 620px;
+		position: absolute;
+		left:810px;
+		top:0px;
+	}
+
+
+/*- Base Column Values
+--------------------------------------------*/
+	.a1,
+	.a2,
+	.a3,
+	.a4,
+	.a5,
+	.a6{
+		position: absolute;
+		top: 0;
+	}
+	
+	.b1,
+	.b2,
+	.b3,
+	.b4,
+	.b5,
+	.b6{
+		position: absolute;
+		top: 210px;
+	}
+	
+	.c1,
+	.c2,
+	.c3,
+	.c4,
+	.c5,
+	.c6{
+		position: absolute;
+		top: 420px;
+	}
+	
+/*- Row Positions
+--------------------------------------------*/
+	.a1,
+	.b1,
+	.c1{
+		left: 0px;
+	}
+	
+	.a2,
+	.b2,
+	.c2{
+		left: 270px;
+	}
+	
+	.a3,
+	.b3,
+	.c3{
+		left: 540px;
+	}
+	
+	.a4,
+	.b4,
+	.c4{
+		left: 810px;
+	}
+	
+	.a5,
+	.b5,
+	.c5{
+		left: 1080px;
+	}
+	
+	.a6,
+	.b6,
+	.c6{
+		left: 1350px;
+	}
+	
+	/*- Grid Values
+--------------------------------------------
+	.a1{
+		position: absolute;
+		left:0;
+		top:0;
+	}
+	
+	.a2{
+		position: absolute;
+		left:270px;
+		top:0;
+	}
+	
+	.a3{
+		position: absolute;
+		left:540px;
+		top:0;
+	}
+	
+	.a4{
+		position: absolute;
+		left:810px;
+		top:0;
+	}
+	
+	.a5{
+		position: absolute;
+		left:1080px;
+		top:0;
+	}
+	
+	.a6{
+		position: absolute;
+		left:1350px;
+		top:0;
+	}
+	
+	.b1{
+		position: absolute;
+		top:210px;
+		left:0px;
+		
+	}
+	
+	.b2{
+		position: absolute;
+		left:270px;
+		top:210px;
+	}
+	
+	.b3{
+		position: absolute;
+		left:540px;
+		top:210px;
+	}
+	
+	.b4{
+		position: absolute;
+		left:810px;
+		top:210px;
+	}
+	
+	.b5{
+		position: absolute;
+		left:1080px;
+		top:210px;
+	}
+	
+	.b6{
+		position: absolute;
+		left:1350px;
+		top:210px;
+	}
+	
+	.c1{
+		position: absolute;
+		left:0;
+		top:420px;
+	}
+	
+	.c2{
+		position: absolute;
+		left:270px;
+		top:420px;
+	}
+	
+	.c3{
+		position: absolute;
+		left:540px;
+		top:420px;
+	}
+	
+	.c4{
+		position: absolute;
+		left:810px;
+		top:420px;
+	}
+	
+	.c5{
+		position: absolute;
+		left:1080px;
+		top:420px;
+	}
+	
+	.c6{
+		position: absolute;
+		left:1350px;
+		top:420px;
+	}*/

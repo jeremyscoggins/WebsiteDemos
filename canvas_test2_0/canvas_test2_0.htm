@@ -1,0 +1,396 @@
+<!DOCTYPE html> 
+<html> 
+	<head> 
+		<script type="text/javascript"> 
+			var deg2rad = new Array();
+			var deg2cos = new Array();
+			var deg2sin = new Array();
+			for (a = 0 ; a<=360;a++){
+			  deg2rad[a]=a*(Math.PI/180);
+			  deg2cos[a]=Math.cos(deg2rad[a]);
+			  deg2sin[a]=Math.sin(deg2rad[a]);
+			}
+			Array.prototype.clone = function () {var a = new Array(); for (var property in this) {a[property] = typeof (this[property]) == 'object' ? this[property].clone() : this[property]} return a}
+			function resizeAndPosition(objectPoints,size,positionX,positionY,positionZ){
+				returnObject = objectPoints.clone();
+				for(pt =0;pt<returnObject.length;pt++){
+					returnObject[pt][0]*=size;
+					returnObject[pt][1]*=size;
+					returnObject[pt][2]*=size;
+
+					returnObject[pt][0]+=positionX;
+					returnObject[pt][1]+=positionY;
+					returnObject[pt][2]+=positionZ;
+				}
+				return returnObject;
+			}
+			function restrict360(ang){
+					if(ang < 0)
+					  return ang+360;
+					if(ang > 360)
+					  return ang-360;
+					return ang;
+			}
+			function drawline(point1,point2){
+					if(checkbounds(point1,cube.main.screenWidth,cube.main.screenHeight,8000) || checkbounds(point2,cube.main.screenWidth,cube.main.screenHeight,8000)){
+						cube.main.context.beginPath();
+						cube.main.context.moveTo(point1.projectedX, point1.projectedY);
+						cube.main.context.lineTo(point2.projectedX, point2.projectedY);
+						cube.main.context.stroke();
+						//console.log("line:"+point1.projectedX+","+point1.projectedY+" "+point2.projectedX+","+point2.projectedY+" ");
+					}
+			}
+			function checkbounds(point1,x,y,z){
+				if(point1.projectedX > 0 && point1.projectedX < x && point1.projectedY > 0 && point1.projectedY < y && point1.translatedZ > 0 && point1.translatedZ < z)
+					return true;
+				else
+					return false;
+			}
+			box = [
+					[ -10, -10, -10 ], [ 10, -10, -10 ], [ 10, 10, -10 ], [ -10, 10, -10 ],
+					//back
+					[ -10, -10, 10 ], [ 10, -10, 10 ], [ 10, 10, 10 ], [ -10, 10, 10 ],
+					//left
+					[ -10, -10, -10 ], [ -10, -10, 10 ], [ -10, 10, 10 ], [ -10, 10, -10 ],
+					//right
+					[ 10, -10, -10 ], [ 10, -10, 10 ], [ 10, 10, 10 ], [ 10, 10, -10 ],
+					//top
+					[ -10, -10, -10 ], [ 10, -10, -10 ], [ 10, -10, 10 ], [ -10, -10, 10 ],
+					//bottom
+					[ -10, 10, -10 ], [ 10, 10, -10 ], [ 10, 10, 10 ], [ -10, 10, 10 ]	
+			];
+
+			tank = [
+					[ -10, -10, -10 ], [ 10, -10, -10 ], [ 10, 10, -10 ], [ -10, 10, -10 ],
+					//back
+					[ -10, -10, 10 ], [ 10, -10, 10 ], [ 10, 10, 10 ], [ -10, 10, 10 ],
+					//left
+					[ -10, -10, -10 ], [ -10, -10, 10 ], [ -10, 10, 10 ], [ -10, 10, -10 ],
+					//right
+					[ 10, -10, -10 ], [ 10, -10, 10 ], [ 10, 10, 10 ], [ 10, 10, -10 ],
+					//top
+					[ -10, -10, -10 ], [ 10, -10, -10 ], [ 10, -10, 10 ], [ -10, -10, 10 ],
+					//bottom
+					[ -10, 10, -10 ], [ 10, 10, -10 ], [ 10, 10, 10 ], [ -10, 10, 10 ]	
+			];
+
+		
+			var cube = {};
+			cube.Point = function(){
+				this.x;
+				this.y;
+				this.z;
+
+				this.translatedX;
+				this.translatedY;
+				this.translatedZ;
+				
+				this.projectedX;
+				this.projectedY;
+			};
+			
+		    cube.main = {
+				hfov : 66.5 * Math.PI / 180,
+				vfov : 50 * Math.PI / 180,
+				maxDistance : 800,
+				
+				model : [ 
+					/*
+					//front
+					[ -10, -10, -12 ], [ 10, -10, -12 ], [ 10, 10, -12 ], [ -10, 10, -12 ],
+					//back
+					[ -10, -10, 12 ], [ 10, -10, 12 ], [ 10, 10, 12 ], [ -10, 10, 12 ],
+					//left
+					[ -12, -10, -10 ], [ -12, -10, 10 ], [ -12, 10, 10 ], [ -12, 10, -10 ],
+					//right
+					[ 12, -10, -10 ], [ 12, -10, 10 ], [ 12, 10, 10 ], [ 12, 10, -10 ],
+					//top
+					[ -10, -12, -10 ], [ 10, -12, -10 ], [ 10, -12, 10 ], [ -10, -12, 10 ],
+					//bottom
+					[ -10, 12, -10 ], [ 10, 12, -10 ], [ 10, 12, 10 ], [ -10, 12, 10 ]
+					*/
+					/*
+					//front
+					,[ -5, -5, -6 ], [ 5, -5, -6 ], [ 5, 5, -6 ], [ -5, 5, -6 ],
+					//back
+					[ -5, -5, 6 ], [ 5, -5, 6 ], [ 5, 5, 6 ], [ -5, 5, 6 ],
+					//left
+					[ -6, -5, -5 ], [ -6, -5, 5 ], [ -6, 5, 5 ], [ -6, 5, -5 ],
+					//right
+					[ 6, -5, -5 ], [ 6, -5, 5 ], [ 6, 5, 5 ], [ 6, 5, -5 ],
+					//top
+					[ -5, -6, -5 ], [ 5, -6, -5 ], [ 5, -6, 5 ], [ -5, -6, 5 ],
+					//bottom
+					[ -5, 6, -5 ], [ 5, 6, -5 ], [ 5, 6, 5 ], [ -5, 6, 5 ]
+					*/
+				],
+				camera : null,
+				keys : [],
+				
+				points : [],				
+				hViewDistance : 0,
+				vViewDistance : 0,
+				screenWidth : 0,
+				screenHeight : 0,
+				context : null,
+								
+				init : function(){
+					if( !document.getElementById( "screen" ).getContext ) return;
+					this.context = document.getElementById( "screen" ).getContext( "2d" );
+					this.screenWidth = document.getElementById( "screen" ).offsetWidth;
+					this.screenHeight = document.getElementById( "screen" ).offsetHeight;
+					
+					// Set up the view distance based on the field-of-view (with pythagoras)
+					this.hViewDistance = ( this.screenWidth / 2 ) / Math.tan( this.hfov / 2 );
+					this.vViewDistance = ( this.screenHeight / 2 ) / Math.tan( this.vfov / 2 );
+					
+					// Create a camera point
+					//this.camera = new cube.Point();
+					this.camera = {x:0,y:0,z:0,xa:0,ya:0,za:0};
+					
+					for(x=1;x<=20;x++){
+						this.model=this.model.concat(resizeAndPosition(box,Math.random()*3/10+.1,Math.random()*100-50,Math.random()*2+20,Math.random()*100-50));
+					}
+					groundPoints=[];
+					elev=-10;
+					for(x=0;x<=20;x++){
+						groundPoints[x]=[];
+						for(y=0;y<=20;y++){
+						  elev+=Math.random()*2-1;
+						  //this.model=this.model.concat([[x-5,elev,y-5],[x+5,elev,y-5],[x+5,elev,y+5],[x-5,elev,y+5]]);
+						  groundPoints[x][y]=elev;
+						}
+					}
+					xm=0;
+					for(x=-100;x<100;x+=10){
+					ym=0;
+						for(y=-100;y<100;y+=10){
+						  //elev=Math.random()*6-3;
+						  //console.log(x+" "+y+" "+xm+" "+ym+" ");
+						  this.model=this.model.concat([[x-5,groundPoints[xm][ym],y-5],[x+5,groundPoints[xm+1][ym],y-5],[x+5,groundPoints[xm+1][ym+1],y+5],[x-5,groundPoints[xm][ym+1],y+5]]);
+						  //groundPoints[x][y]=elev;
+						  ym++;
+						}
+						xm++;
+					}
+					
+					
+					// Init the cube points
+					/*for( var i = 0; i < this.model.length; i++ )
+					{
+						var p = new cube.Point();
+						this.points.push( p );						
+					}*/
+					this.reset();		
+					this.run();
+				},
+				
+				reset : function(){
+					// Reset the camera and cube to front & centre
+					this.camera.x = 0;
+					this.camera.y = -10;
+					this.camera.z = 50;
+					
+					// Init the cube
+					for( var i = 0; i < this.model.length; i++ )
+					{
+						this.points[i]=[];
+						var p = this.points[ i ];
+						p.x = this.model[ i ][ 0 ]; //(Math.random()*30) << 0;
+						p.y = this.model[ i ][ 1 ];
+						p.z = this.model[ i ][ 2 ];
+					}
+				},
+				
+				run : function(){
+					var that = this;
+					
+					// Run the main loop
+					(function tick(){
+						that.update();
+						that.draw();
+						setTimeout( function(){ that.run(); }, 20 );						
+					})();
+				},
+				
+				update : function(){
+					// Update the camera position from keyboard
+					//this.camera.x += this.keys[0] ? -0.2 : this.keys[1] ? 0.2 : 0;
+					//this.camera.y += this.keys[2] ? 0.2 : this.keys[3] ? -0.2 : 0;
+					//this.camera.z += this.keys[8] ? 0.2 : this.keys[9] ? -0.2 : 0;
+					//this.camera.z += this.keys[3] ? 0.5 : this.keys[2] ? -0.5 : 0;
+
+
+
+					//this.camera.ya += this.keys[4] ? 1 : this.keys[5] ? -1 : 0;
+					this.camera.ya += this.keys[0] ? 1 : this.keys[1] ? -1 : 0;
+					this.camera.xa += this.keys[6] ? 1 : this.keys[7] ? -1 : 0;
+					/*if(this.camera.ya < 0)
+					  this.camera.ya+=360;
+					if(this.camera.ya > 360)
+					  this.camera.ya-=360;*/
+					this.camera.ya=restrict360(this.camera.ya);
+					if(this.keys[3]){
+	 					 this.camera.x -= 2*deg2cos[restrict360(this.camera.ya-90)];
+	  					 this.camera.z -= 2*deg2sin[restrict360(this.camera.ya-90)];
+	  					//this.camera.z+=2;
+					}else if (this.keys[2]){
+	 					 this.camera.x += 2*deg2cos[restrict360(this.camera.ya-90)];
+	  					 this.camera.z += 2*deg2sin[restrict360(this.camera.ya-90)];
+	  					//this.camera.z-=2;
+					}	
+
+					
+					// Update all the points									
+					for( var i = 0; i < this.points.length; i++ ){
+						var point = this.points[ i ];
+						
+						
+						
+						
+						point.translatedX=point.x;
+						point.translatedY=point.y;
+						point.translatedZ=point.z;
+
+						//angRad = ang*(Math.PI/180);
+						//z2=point.z*Math.cos(angRad)-point.x*Math.sin(angRad);
+						//x2=point.z*Math.sin(angRad)+point.x*Math.cos(angRad);
+						//y2=point.y;
+						
+						//rotate the cube
+						/*
+						ang=1;
+						point.translatedZ=point.z*deg2cos[ang]-point.x*deg2sin[ang];
+						point.translatedX=point.z*deg2sin[ang]+point.x*deg2cos[ang];
+						point.translatedY=point.y;
+						*/
+
+
+
+						//apply the rotation back to the cube, this makes it spin
+						//point.x=point.translatedX;
+						//point.y=point.translatedY;
+						//	point.z=point.translatedZ;
+
+						// Apply camera transform		
+						//point.x += this.camera.x;
+						//point.y += this.camera.y;
+						//point.z += this.camera.z;											
+
+						//apply the camera poisition
+						point.translatedX += this.camera.x;
+						point.translatedY += this.camera.y;
+						point.translatedZ += this.camera.z;											
+ 
+ 
+						//apply the camera y rotation
+						tX=point.translatedX;
+						tZ=point.translatedZ;
+						
+						point.translatedZ=tZ*deg2cos[this.camera.ya]-tX*deg2sin[this.camera.ya];
+						point.translatedX=tZ*deg2sin[this.camera.ya]+tX*deg2cos[this.camera.ya];
+						//point.translatedY=point.translatedY;
+
+
+						// Project to 2D space
+						//point.projectedX = ( point.x * this.hViewDistance ) / point.z;
+						//point.projectedY = ( point.y * this.vViewDistance ) / point.z;
+						point.projectedX = ( point.translatedX * this.hViewDistance ) / point.translatedZ;
+						point.projectedY = ( point.translatedY * this.vViewDistance ) / point.translatedZ;
+ 
+						// Transform from X/Y to screen coordinates
+						point.projectedX += this.screenWidth / 2;
+						point.projectedY = ( this.screenHeight / 2 ) - point.projectedY;
+						
+						//point.projectedX = Math.floor(point.projectedX);
+						//point.projectedY = Math.floor(point.projectedY);
+					}
+ 
+				},
+				
+				draw : function(){
+					var ctx = this.context;
+					ctx.fillStyle = "#000";
+					ctx.fillRect( 0, 0, this.screenWidth, this.screenHeight );
+ 
+					ctx.strokeStyle = "#090";
+					ctx.lineWidth = 1;
+					
+					// Draw lines between all the cube points
+					for(plane=0;plane<this.points.length/4;plane++){
+
+					drawline(this.points[0+(plane*4)],this.points[1+(plane*4)]);
+					drawline(this.points[1+(plane*4)],this.points[2+(plane*4)]);
+					drawline(this.points[2+(plane*4)],this.points[3+(plane*4)]);
+					drawline(this.points[3+(plane*4)],this.points[0+(plane*4)]);
+					/*ctx.beginPath();
+					ctx.moveTo(this.points[0+(plane*4)].projectedX, this.points[0+(plane*4)].projectedY);
+					ctx.lineTo(this.points[1+(plane*4)].projectedX, this.points[1+(plane*4)].projectedY);
+					ctx.lineTo(this.points[2+(plane*4)].projectedX, this.points[2+(plane*4)].projectedY);
+					ctx.lineTo(this.points[3+(plane*4)].projectedX, this.points[3+(plane*4)].projectedY);
+					ctx.lineTo(this.points[0+(plane*4)].projectedX, this.points[0+(plane*4)].projectedY);
+					ctx.stroke();*/
+					}
+					/*
+					ctx.beginPath();
+					// Top polygon
+					ctx.moveTo(this.points[0].projectedX, this.points[0].projectedY);
+					ctx.lineTo(this.points[1].projectedX, this.points[1].projectedY);
+					ctx.lineTo(this.points[2].projectedX, this.points[2].projectedY);
+					ctx.lineTo(this.points[3].projectedX, this.points[3].projectedY);
+					ctx.lineTo(this.points[0].projectedX, this.points[0].projectedY);
+ 
+					// Bottom polygon
+					ctx.lineTo(this.points[4].projectedX, this.points[4].projectedY);
+					ctx.lineTo(this.points[5].projectedX, this.points[5].projectedY);
+					ctx.lineTo(this.points[6].projectedX, this.points[6].projectedY);
+					ctx.lineTo(this.points[7].projectedX, this.points[7].projectedY);
+					ctx.lineTo(this.points[4].projectedX, this.points[4].projectedY);
+					
+					// Joining middle lines
+					ctx.moveTo(this.points[1].projectedX, this.points[1].projectedY);
+					ctx.lineTo(this.points[5].projectedX, this.points[5].projectedY);
+					ctx.moveTo(this.points[2].projectedX, this.points[2].projectedY);
+					ctx.lineTo(this.points[6].projectedX, this.points[6].projectedY);
+					ctx.moveTo(this.points[3].projectedX, this.points[3].projectedY);
+					ctx.lineTo(this.points[7].projectedX, this.points[7].projectedY);
+ 
+					ctx.stroke();
+					*/
+				},
+ 
+				key : function( e, state ){
+					var code = 0;
+					if (!e) var e = window.event;
+					if (e.keyCode) code = e.keyCode;
+					else if (e.which) code = e.which;
+					switch ( code ){
+						case 37: this.keys[ 0 ] = state; break; // left
+						case 38: this.keys[ 2 ] = state; break; // up
+						case 39: this.keys[ 1 ] = state; break; // right
+						case 40: this.keys[ 3 ] = state; break;// down
+
+						case 65: this.keys[ 4 ] = state; break; // a
+						case 87: this.keys[ 6 ] = state; break; // w
+						case 68: this.keys[ 5 ] = state; break; // s
+						case 83: this.keys[ 7 ] = state; break;//  d
+
+
+						case 32: this.keys[ 8 ] = state; break; // space bar;
+						case 17: this.keys[ 9 ] = state; break; // ctrl
+					}
+				}
+			};
+			
+			window.addEventListener( "load", function(){ cube.main.init(); }, false);
+			window.addEventListener( "keydown", function( e ){ cube.main.key( e, true ); }, false);
+			window.addEventListener( "keyup", function( e ){ cube.main.key( e, false ); }, false);
+			window.addEventListener( "click", function( e ){ cube.main.reset(); }, false );
+	
+		</script> 
+	</head> 
+	<body> 
+		<canvas id="screen" width="533" height="418">Gots to get a better browser, yo.</canvas> 
+
+	</body> 
+</html>

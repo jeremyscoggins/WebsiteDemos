@@ -1,0 +1,349 @@
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+		<style>
+		body {
+			background-color:#000000;
+		}
+		canvas{
+			border:1px solid #00ff00;
+		}
+		a{
+		  color:#00FF00;
+		  text-decoration:none;
+		  font-weight:bolder;
+		}
+		body{
+		margin:0px;
+		padding:0px;
+		height:100%;
+		width:100%;
+		}
+		</style>
+	</head>
+	<body>
+	<canvas id="tutorial" width="500" height="550"></canvas><br>
+	<canvas id="tutorial2" width="500" height="150"></canvas><br>
+	<a href="#" onClick="canon.angle+=1;return false;">angle+</a>
+	<a href="#" onClick="canon.angle-=1;return false;">angle-</a><br>
+	<a href="#" onClick="canon.x-=10;return false;">move left</a>
+	<a href="#" onClick="canon.x+=10;return false;">move right</a><br>
+	<a href="#" onClick="canon.vel-=1;return false;">more power</a>
+	<a href="#" onClick="canon.vel-=1;return false;">less power</a>
+	<script>
+	window.onkeydown=function(event){
+	  switch(event.keyCode){
+	  case 87: //W
+	   canon.angle+=1;
+	  break;
+	  case 83: //S
+	   canon.angle-=1;
+	  break;
+	  case 65: //A
+	   canon.x-=10;
+	  break;
+	  case 68: //D
+	   canon.x+=10;
+	  break;
+	  case 81: //Q
+	   canon.vel+=1;
+	  break;
+	  case 69: //E
+	   canon.vel-=1;
+	  break;
+	  }
+	};
+	canvasEl = document.getElementById("tutorial");
+	canvasContext = canvasEl.getContext("2d");
+	canvasEl2 = document.getElementById("tutorial2");
+	canvasContext2 = canvasEl2.getContext("2d");
+    canvasContext.fillStyle = "rgb(0,100,0)";
+    canvasContext.strokeStyle = "rgb(0,200,0)";
+    canvasContext2.fillStyle = "rgb(0,100,0)";
+    canvasContext2.strokeStyle = "rgb(0,200,0)";
+	var stars = new Array();
+	var explosions = new Array();
+	var trees = new Array();
+	var starSize=5;
+	var starSizeMax=15;
+	var groundHeight=25;
+	var treeSize=75;
+	var explosionSize=200;
+	var maxX = canvasEl.width;
+	var maxY = canvasEl.height-starSize-groundHeight;
+	var bottomScaleY=canvasEl2.height/canvasEl.height;
+	var bottomScaleX = canvasEl2.height/canvasEl.height;
+	var maxZ = Math.floor(1/bottomScaleX*(canvasEl2.width-starSize));
+	var blankCanvas;
+	var blankCanvas2;
+	var friction=.2;
+	var canon={x:Math.floor(maxX/2),y:maxY-10,z:100,angle:45,direction:180,vel:10,sz:100};
+	var mouseEvents = new Array();
+	//var starCount=10;
+
+	window.onclick=function(event){
+	  //alert(event.clientX+" "+event.clientY);
+	  mouseEvents.push({x:event.clientX,y:event.clientY,age:0});
+	  if(event.clientX < canvasEl.width && event.clientY < canvasEl.height){
+		canon.x = event.clientX;
+	  } else if(event.clientX < canvasEl.width && event.clientY < canvasEl.height+canvasEl2.height){
+	  	xPos = event.clientX;
+	  	yPos = event.clientY-canvasEl.height;
+	  	xCanon = canon.z*bottomScaleX;
+	  	yCanon = canon.y*bottomScaleX;
+	  	xDiff = xPos - xCanon;
+	  	yDiff = yPos - yCanon;
+	  	angle=deg(Math.atan2(yDiff,xDiff));
+	  	//dist=Math.sqrt(xDiff+yDiff);
+	  	//alert(dist);
+	    canon.angle=Math.abs(angle);
+	    //canon.vel=dist;
+	  }
+	  //alert(mouseEvents.length);
+	};
+
+
+function rand(n){
+  return ( Math.floor ( Math.random ( ) * n + 1 ) );
+}
+function deg(rad){
+   return rad*(180/Math.PI);
+}
+function rad(deg){
+   return deg*(Math.PI/180);
+}
+function explodeThink(explosion){
+    explosion.radius+=explosionSize/100;
+    colorVal=Math.floor((explosionSize-explosion.radius)/explosionSize*200);
+    canvasContext.strokeStyle = "rgb(0,"+colorVal+",0)";
+    canvasContext2.strokeStyle = "rgb(0,"+colorVal+",0)";
+
+
+    zSize=Math.floor((maxZ-explosion.z)/maxZ*explosion.radius*5);
+	canvasContext.beginPath();
+	canvasContext.arc(Math.floor(explosion.x),Math.floor(explosion.y),zSize,0,Math.PI,true)
+	//canvasContext.fill();
+	canvasContext.stroke();
+	canvasContext2.beginPath();
+	canvasContext2.arc(Math.floor(explosion.z*bottomScaleX),Math.floor(explosion.y*bottomScaleY),Math.floor(explosion.radius*.5),0,Math.PI,true)
+	//canvasContext2.fill();
+	canvasContext2.stroke();
+}
+function mouseThink(mouseEvent){
+mouseEvent.age++;
+colorVal = Math.floor((50-mouseEvent.age)/50*200);
+//canvasContext.strokeRect(mouseEvent.x-5,mouseEvent.y-5,10,10	);
+
+if(mouseEvent.x < canvasEl.width && mouseEvent.y < canvasEl.height){
+	canvasContext.strokeStyle = "rgb("+colorVal+",0,0)";
+	canvasContext.beginPath();
+	canvasContext.arc(mouseEvent.x,mouseEvent.y,mouseEvent.age,0,Math.PI*2,true)
+	canvasContext.stroke();
+}
+else if(mouseEvent.x < canvasEl.width && mouseEvent.y < canvasEl.height + canvasEl2.height){
+	console.log("bottom touch");
+	canvasContext2.strokeStyle = "rgb("+colorVal+",0,0)";
+	canvasContext2.beginPath();
+	canvasContext2.arc(mouseEvent.x,mouseEvent.y-canvasEl.height,mouseEvent.age,0,Math.PI*2,true)
+	canvasContext2.stroke();
+}
+
+
+
+}
+
+function treeDraw(x,y,z){
+      treeHeight=Math.max(Math.floor(((maxX-z)/maxX)*treeSize),10);
+      treeWidth=Math.floor(treeHeight*.4);
+
+
+      colorVal=Math.floor((maxX-z)/maxX*100)+100;
+      canvasContext.strokeStyle = "rgb(0,"+colorVal+",0)";
+      canvasContext.beginPath();
+      canvasContext.moveTo(x,y-treeHeight);
+      canvasContext.lineTo(Math.floor(x-treeWidth/2),y);
+      canvasContext.lineTo(Math.floor(x+treeWidth/2),y);
+      canvasContext.lineTo(x,y-treeHeight);
+      canvasContext.stroke();
+
+      canvasContext2.strokeStyle = "rgb(0,200,0)";
+      canvasContext2.beginPath();
+      canvasContext2.moveTo(z*bottomScaleX,Math.floor(y*bottomScaleY-treeSize*bottomScaleY));
+      canvasContext2.lineTo(z*bottomScaleX-treeSize*bottomScaleY*.2,Math.floor(y*bottomScaleY));
+      canvasContext2.lineTo(z*bottomScaleX+treeSize*bottomScaleY*.2,Math.floor(y*bottomScaleY));
+      canvasContext2.lineTo(z*bottomScaleX,Math.floor(y*bottomScaleY-treeSize*bottomScaleY));
+      canvasContext2.stroke();
+
+}
+function drawCanon(){
+	  y2 = canon.y-canon.sz*Math.sin(rad(canon.angle));
+	  x2 = canon.sz*Math.cos(rad(canon.angle))+canon.z;
+
+      canvasContext.strokeStyle = "rgb(0,200,0)";
+      canvasContext.beginPath();
+      canvasContext.moveTo(canon.x,canon.y);
+      canvasContext.lineTo(canon.x,Math.floor(y2));
+      canvasContext.stroke();
+
+      canvasContext2.strokeStyle = "rgb(0,200,0)";
+      canvasContext2.beginPath();
+      canvasContext2.moveTo(Math.floor(canon.z*bottomScaleX),Math.floor(canon.y*bottomScaleY));
+      canvasContext2.lineTo(Math.floor(x2*bottomScaleX),Math.floor(y2*bottomScaleY));
+      canvasContext2.stroke();
+
+      canvasContext.strokeRect(Math.floor(canon.x-canon.sz/4),Math.floor(canon.y-canon.sz/8),canon.sz/2,canon.sz/4);
+      canvasContext2.strokeRect(Math.floor(canon.z*bottomScaleX-canon.sz/4*bottomScaleX),Math.floor(canon.y*bottomScaleX-canon.sz/8*bottomScaleY),canon.sz/2*bottomScaleX,canon.sz/4*bottomScaleX);
+      //canvasContext2.strokeRect(Math.floor(z*bottomScaleX-starSize/2),Math.floor(y*bottomScaleY-starSize/2),starSize,starSize);
+
+
+}
+
+function draw(x,y,z){
+    colorVal=Math.floor((maxX-z)/maxZ*100)+100;
+    canvasContext.fillStyle = "rgb(0,"+colorVal+",0)";
+    canvasContext2.fillStyle = "rgb(0,100,0)";
+
+
+      zSize=Math.floor(((maxZ-z)/maxZ)*starSizeMax);
+      x2 = x-zSize/2;
+      y2 = y-zSize/2;
+      canvasContext.fillRect(Math.floor(x2-(zSize/2)),Math.floor(y2-(zSize/2)),zSize,zSize);
+      canvasContext2.fillRect(Math.floor(z*bottomScaleX-starSize/2),Math.floor(y*bottomScaleY-starSize/2),starSize,starSize);
+}
+function clearAll(){
+	canvasContext.clearRect(0,0,canvasEl.width,canvasEl.height);
+    canvasContext.putImageData(blankCanvas,0,0);
+	canvasContext2.clearRect(0,0,canvasEl2.width,canvasEl2.height);
+    canvasContext2.putImageData(blankCanvas2,0,0);
+}
+function newStar(){
+  //stars.push({x:rand(maxX),y:maxY-5,z:5,velX:0,velY:(rand(10)+5)*-1,velZ:rand(2)+1/*,interval:setInterval("animate(stars["+x+"])",20)*/});
+	  y2 = canon.y-canon.sz*Math.sin(rad(canon.angle));
+	  x2 = canon.sz*Math.cos(rad(canon.angle))+canon.z;
+  velY=canon.vel*Math.sin(rad(canon.angle))*-1;
+  velZ=canon.vel*Math.cos(rad(canon.angle));
+  stars.push({x:canon.x,y:y2,z:x2,velX:0,velY:velY,velZ:velZ/*,interval:setInterval("animate(stars["+x+"])",20)*/});
+  //draw(Math.floor(stars[x].x),Math.floor(stars[x].y),Math.floor(stars[x].z));
+}
+function newTree(){
+  trees.push({x:rand(maxX-10)+10,y:maxY,z:rand(maxZ-50)+50});
+}
+function newExplosion(x,y,z){
+  explosions.push({x:x,y:y,z:z,radius:1});
+  //draw(Math.floor(stars[x].x),Math.floor(stars[x].y),Math.floor(stars[x].z));
+}
+
+function animate(star){
+      //canvasContext.clearRect(Math.floor(star.x),Math.floor(star.y),starSize,starSize);
+      //zSize=Math.floor(((maxX-star.z)/maxX)*starSizeMax);
+      star.velY+=0.2;
+      if(star.x>=maxX || star.x<=0){
+        star.velX=(star.velX*friction)*-1;
+        star.velZ=star.velZ*friction;
+        star.velY=star.velY*friction;
+      }
+      if(star.y>=maxY || star.y<=0){
+        star.velY=(star.velY*friction)*-1;
+        star.velZ=star.velZ*friction;
+        star.velX=star.velX*friction;
+      }
+      if(star.z>=maxZ || star.z<=0){
+        star.velZ=(star.velZ*friction)*-1;
+        //star.velY=star.velY*friction;
+        star.velX=star.velX*friction;
+      }
+
+      star.x=Math.max(0,Math.min(maxX,star.x+star.velX));
+      star.y=Math.max(0,Math.min(maxY,star.y+star.velY));
+      star.z=Math.max(0,Math.min(maxZ,star.z+star.velZ));
+
+	    draw(star.x,star.y,star.z);
+      if(Math.abs(star.velX)+Math.abs(star.velY)+Math.abs(star.velZ) < .5 && Math.floor(star.y) >= maxY){
+	star.velX=0;
+	star.velY=0;
+	star.velZ=0;
+	//explode(Math.floor(star.x),Math.floor(star.y)+starSize,Math.floor(star.z),100)
+	newExplosion(star.x,star.y,star.z);
+	
+	}
+	//clearInterval(star.interval);
+}
+
+
+
+	
+
+
+
+for(t=1;t<10;t++){
+  newTree();
+}
+for(z=0;z<trees.length;z++){
+	treeDraw(trees[z].x,trees[z].y,trees[z].z);
+}
+
+canvasContext.strokeStyle = "rgb(0,200,0)";
+canvasContext2.strokeStyle = "rgb(0,200,0)";
+canvasContext.beginPath();
+canvasContext.moveTo(0,canvasEl.height-groundHeight);
+canvasContext.lineTo(canvasEl.width,canvasEl.height-groundHeight);
+canvasContext.stroke();
+canvasContext2.beginPath();
+canvasContext2.moveTo(0,Math.floor(canvasEl2.height-groundHeight*bottomScaleY));
+canvasContext2.lineTo(canvasEl2.width,Math.floor(canvasEl2.height-groundHeight*bottomScaleY));
+canvasContext2.stroke();
+
+
+for(y=0;y<=canvasEl.width+groundHeight/2;y+=canvasEl.width/100){
+canvasContext.beginPath();
+canvasContext.moveTo(Math.floor(y-groundHeight/2),canvasEl.height-groundHeight);
+canvasContext.lineTo(y,canvasEl.height);
+canvasContext.stroke();
+canvasContext2.beginPath();
+canvasContext2.moveTo(Math.floor(y+groundHeight/2*bottomScaleY),Math.floor(canvasEl2.height-groundHeight*bottomScaleY));
+canvasContext2.lineTo(y,canvasEl2.height);
+canvasContext2.stroke();
+
+}
+blankCanvas = canvasContext.getImageData(0,0,canvasEl.width,canvasEl.height);
+blankCanvas2 = canvasContext2.getImageData(0,0,canvasEl2.width,canvasEl2.height);
+
+  newStar();
+  setInterval(newStar,2000);
+
+
+setInterval(function(){
+	clearAll();
+	drawCanon();
+	for(x=0;x<stars.length;x++){
+		animate(stars[x]);
+		if(stars[x].velX+stars[x].velY+stars[x].velZ==0){
+		  stars.splice(x,1);
+		  x--;
+		}
+		
+    }
+	for(y=0;y<explosions.length;y++){
+		explodeThink(explosions[y]);
+	    if(explosions[y].radius>explosionSize){
+    	  explosions.splice(y,1);
+    	  y--;
+    	 }
+	}
+	for(z=0;z<mouseEvents.length;z++){
+		mouseThink(mouseEvents[z]);
+	    if(mouseEvents[z].age>50){
+    	  mouseEvents.splice(z,1);
+    	  z--;
+    	 }
+    }    
+},20);
+
+
+
+
+</script>
+
+
+	</body>
+</html>
